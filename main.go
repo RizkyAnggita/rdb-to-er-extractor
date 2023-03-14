@@ -1,7 +1,12 @@
 package main
 
 import (
+	"database/sql"
+	"fmt"
 	"net/http"
+	"rdb-to-er-extractor/extract"
+
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,5 +48,32 @@ func main() {
 	router.GET("/albums", getAlbums)
 	router.POST("/albums", postAlbums)
 
-	router.Run("localhost:8080")
+	username := "root"
+	password := "regars2000"
+	dbType := "mysql"
+
+	db, err := sql.Open(dbType, username+":"+password+"@tcp(localhost:3306)/classicmodels")
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer db.Close()
+
+	tableNames := extract.GetAllTables(db, "classicmodels")
+
+	for _, table := range tableNames {
+		primaryKeyColumns := extract.GetPrimaryKeyFromRelation(db, "classicmodels", table)
+		foreignKeyColumns := extract.GetForeignKeyFromRelation(db, "classicmodels", table)
+
+		fmt.Println("\nTABLE: ", table)
+		fmt.Println("PK: ", primaryKeyColumns)
+
+		for _, fk := range foreignKeyColumns {
+			fmt.Printf("FK: %+v\n", fk)
+		}
+
+		fmt.Println("--------------------------")
+	}
+
+	// router.Run("localhost:8080")
 }
