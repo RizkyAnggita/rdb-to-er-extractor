@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"rdb-to-er-extractor/extract"
+	"rdb-to-er-extractor/model"
 
 	_ "github.com/go-sql-driver/mysql"
 
@@ -60,20 +61,50 @@ func main() {
 	defer db.Close()
 
 	tableNames := extract.GetAllTables(db, "classicmodels")
+	tables := []model.Table{}
 
-	for _, table := range tableNames {
-		primaryKeyColumns := extract.GetPrimaryKeyFromRelation(db, "classicmodels", table)
-		foreignKeyColumns := extract.GetForeignKeyFromRelation(db, "classicmodels", table)
+	for _, tableName := range tableNames {
+		table := model.Table{Name: tableName}
+		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, "classicmodels", tableName)
+		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, "classicmodels", tableName)
+		tables = append(tables, table)
+	}
 
-		fmt.Println("\nTABLE: ", table)
-		fmt.Println("PK: ", primaryKeyColumns)
-
-		for _, fk := range foreignKeyColumns {
-			fmt.Printf("FK: %+v\n", fk)
+	for i := 0; i < len(tables); i++ {
+		// fmt.Println("NAME: ", tables[i].Name)
+		if isStrong := extract.IsStrongRelation(tables[i], tables); isStrong {
+			tables[i].Type = "STRONG"
 		}
 
-		fmt.Println("--------------------------")
+		// fmt.Println("STRONG: ", tables[i].Type)
+		// fmt.Println("------")
 	}
+
+	for i := 0; i < len(tables); i++ {
+		fmt.Println("NAME: ", tables[i].Name)
+		if tables[i].Type == "" {
+			if isRegular := extract.IsRegularRelationshipRelation(tables[i], tables); isRegular {
+				tables[i].Type = "REGULAR"
+			}
+		}
+
+		fmt.Println("TYPE: ", tables[i].Type)
+		fmt.Println("------")
+	}
+
+	// for _, table := range tableNames {
+	// 	primaryKeyColumns := extract.GetPrimaryKeyFromRelation(db, "classicmodels", table)
+	// 	foreignKeyColumns := extract.GetForeignKeyFromRelation(db, "classicmodels", table)
+
+	// 	fmt.Println("\nTABLE: ", table)
+	// 	fmt.Println("PK: ", primaryKeyColumns)
+
+	// 	for _, fk := range foreignKeyColumns {
+	// 		fmt.Printf("FK: %+v\n", fk)
+	// 	}
+
+	// 	fmt.Println("--------------------------")
+	// }
 
 	// router.Run("localhost:8080")
 }

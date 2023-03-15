@@ -26,7 +26,7 @@ func GetAllTables(db *sql.DB, dbName string) (tables []string) {
 	return
 }
 
-func GetPrimaryKeyFromRelation(db *sql.DB, dbName, relationName string) (primaryKeyColumns []string) {
+func GetPrimaryKeyFromRelation(db *sql.DB, dbName, relationName string) (primaryKeyColumns []model.PrimaryKey) {
 	rows, err := db.Query(`
 		SELECT kcu.COLUMN_NAME 
 		FROM information_schema.TABLE_CONSTRAINTS tc 
@@ -39,13 +39,13 @@ func GetPrimaryKeyFromRelation(db *sql.DB, dbName, relationName string) (primary
 	}
 
 	for rows.Next() {
-		var column string
-		if err := rows.Scan(&column); err != nil {
+		var row model.PrimaryKey
+		if err := rows.Scan(&row.ColumnName); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
 
-		primaryKeyColumns = append(primaryKeyColumns, column)
+		primaryKeyColumns = append(primaryKeyColumns, row)
 	}
 
 	return
