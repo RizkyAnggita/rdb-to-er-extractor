@@ -71,52 +71,32 @@ func main() {
 	}
 
 	for i := 0; i < len(tables); i++ {
-		// fmt.Println("NAME: ", tables[i].Name)
-		if isStrong := extract.IsStrongRelation(tables[i], tables); isStrong {
-			tables[i].Type = "STRONG"
-		}
-
-		// fmt.Println("STRONG: ", tables[i].Type)
-		// fmt.Println("------")
-	}
-
-	for i := 0; i < len(tables); i++ {
-		// fmt.Println("NAME: ", tables[i].Name)
-		if isWeak := extract.IsWeakRelation(tables[i], tables); isWeak {
-			tables[i].Type = "WEAK"
-		}
-
-		fmt.Println("WEAK: ", tables[i].Type)
-		fmt.Println("------")
-	}
-
-	for i := 0; i < len(tables); i++ {
-		fmt.Println("NAME: ", tables[i].Name)
 		if tables[i].Type == "" {
-			if isRegular := extract.IsRegularRelationshipRelation(tables[i], tables); isRegular {
-				tables[i].Type = "REGULAR"
-			}
+			extract.ClassifyStrongRelation(&tables[i], tables)
 		}
-
-		fmt.Println("TYPE: ", tables[i].Type)
-		fmt.Println("------")
 	}
 
-	// fmt.Println(helper.GenerateProperSubsetPK([]model.PrimaryKey{{ColumnName: "A"}, {ColumnName: "B"}, {ColumnName: "C"}}))
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "" {
+			extract.ClassifyWeakRelation(&tables[i], tables)
+		}
+	}
 
-	// for _, table := range tableNames {
-	// 	primaryKeyColumns := extract.GetPrimaryKeyFromRelation(db, "classicmodels", table)
-	// 	foreignKeyColumns := extract.GetForeignKeyFromRelation(db, "classicmodels", table)
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "" {
+			extract.ClassifyRegularRelationshipRelation(&tables[i], tables)
+		}
+	}
 
-	// 	fmt.Println("\nTABLE: ", table)
-	// 	fmt.Println("PK: ", primaryKeyColumns)
-
-	// 	for _, fk := range foreignKeyColumns {
-	// 		fmt.Printf("FK: %+v\n", fk)
-	// 	}
-
-	// 	fmt.Println("--------------------------")
-	// }
+	for i := 0; i < len(tables); i++ {
+		fmt.Println("____________________________")
+		fmt.Println("NAME: ", tables[i].Name)
+		fmt.Println("TYPE: ", tables[i].Type)
+		fmt.Println("PK: ", tables[i].PrimaryKeys)
+		fmt.Println("FK: ", tables[i].ForeignKeys)
+		fmt.Println("DK: ", tables[i].DanglingKeys)
+		fmt.Println("____________________________")
+	}
 
 	// router.Run("localhost:8080")
 }

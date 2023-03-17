@@ -5,28 +5,30 @@ import (
 	"rdb-to-er-extractor/model"
 )
 
-func IsStrongRelation(table model.Table, allTable []model.Table) bool {
+func ClassifyStrongRelation(table *model.Table, allTable []model.Table) {
 	// to check if a table is strong relation or not,
 	// we need to check if its primary key appear as key of other relation, than it's not strong
 
 	// If the number of primary key of a relation is one, definitely is a strong entity relation
 	if len(table.PrimaryKeys) == 1 {
-		return true
+		table.Type = "STRONG"
+		return
 	}
 
 	// otherwise, we need to check if every key of primary keys appear in other relation
 	for _, t := range allTable {
 		if t.Name != table.Name {
 			if isAppear := isPKExistAsKeyInOtherTable(table.PrimaryKeys, t.PrimaryKeys); isAppear {
-				return false
+				return
 			}
 		}
 	}
 
-	return true
+	table.Type = "STRONG"
+	return
 }
 
-func IsWeakRelation(table model.Table, allTable []model.Table) bool {
+func ClassifyWeakRelation(table *model.Table, allTable []model.Table) {
 	properSubset := helper.GenerateProperSubsetPK(table.PrimaryKeys)
 
 	for _, subSet := range properSubset {
@@ -39,16 +41,20 @@ func IsWeakRelation(table model.Table, allTable []model.Table) bool {
 
 			isRemainingPKExistOther := isPKExistAsKeyInOtherEntityRelation(remainingPK, allTable)
 			if !isRemainingPKExistOther {
-				return true
+				for _, key := range remainingPK {
+					table.DanglingKeys = append(table.DanglingKeys, model.DanglingKey{ColumnName: key.ColumnName})
+				}
+				table.Type = "WEAK"
+				return
 			}
 		}
 	}
-	return false
+	return
 }
 
-func IsRegularRelationshipRelation(table model.Table, allTable []model.Table) bool {
+func ClassifyRegularRelationshipRelation(table *model.Table, allTable []model.Table) {
 	if len(table.PrimaryKeys) < 2 {
-		return false
+		return
 	}
 
 	count := 0
@@ -61,7 +67,12 @@ func IsRegularRelationshipRelation(table model.Table, allTable []model.Table) bo
 		}
 	}
 
-	return count == len(table.PrimaryKeys)
+	if count == len(table.PrimaryKeys) {
+		table.Type = "REGULAR"
+		return
+	}
+
+	return
 }
 
 func setDifference(subset []model.PrimaryKey, set []model.PrimaryKey) []model.PrimaryKey {

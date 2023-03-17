@@ -14,12 +14,17 @@ type PrimaryKey struct {
 	ColumnName string
 }
 
+type DanglingKey struct {
+	ColumnName string
+}
+
 type Table struct {
-	Name        string
-	Columns     []Column
-	PrimaryKeys []PrimaryKey
-	ForeignKeys []ForeignKey
-	Type        string
+	Name         string
+	Columns      []Column
+	PrimaryKeys  []PrimaryKey
+	ForeignKeys  []ForeignKey
+	DanglingKeys []DanglingKey
+	Type         string
 }
 
 type Column struct {
