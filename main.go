@@ -81,6 +81,16 @@ func main() {
 	}
 
 	for i := 0; i < len(tables); i++ {
+		// fmt.Println("NAME: ", tables[i].Name)
+		if isWeak := extract.IsWeakRelation(tables[i], tables); isWeak {
+			tables[i].Type = "WEAK"
+		}
+
+		fmt.Println("WEAK: ", tables[i].Type)
+		fmt.Println("------")
+	}
+
+	for i := 0; i < len(tables); i++ {
 		fmt.Println("NAME: ", tables[i].Name)
 		if tables[i].Type == "" {
 			if isRegular := extract.IsRegularRelationshipRelation(tables[i], tables); isRegular {
@@ -91,6 +101,8 @@ func main() {
 		fmt.Println("TYPE: ", tables[i].Type)
 		fmt.Println("------")
 	}
+
+	// fmt.Println(helper.GenerateProperSubsetPK([]model.PrimaryKey{{ColumnName: "A"}, {ColumnName: "B"}, {ColumnName: "C"}}))
 
 	// for _, table := range tableNames {
 	// 	primaryKeyColumns := extract.GetPrimaryKeyFromRelation(db, "classicmodels", table)

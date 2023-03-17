@@ -1,6 +1,7 @@
 package extract
 
 import (
+	"rdb-to-er-extractor/helper"
 	"rdb-to-er-extractor/model"
 )
 
@@ -25,6 +26,26 @@ func IsStrongRelation(table model.Table, allTable []model.Table) bool {
 	return true
 }
 
+func IsWeakRelation(table model.Table, allTable []model.Table) bool {
+	properSubset := helper.GenerateProperSubsetPK(table.PrimaryKeys)
+
+	for _, subSet := range properSubset {
+		// if a proper subset of its primary key, called K1, contains the keys of entity relations (strong
+		// and/or weak).
+		isContainOtherKey := isPKExistAsKeyInOtherEntityRelation(subSet, allTable)
+		if isContainOtherKey {
+			//The remaining attributes of the primary key, called K2, do not contain a key of any other relation
+			remainingPK := setDifference(subSet, table.PrimaryKeys)
+
+			isRemainingPKExistOther := isPKExistAsKeyInOtherEntityRelation(remainingPK, allTable)
+			if !isRemainingPKExistOther {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func IsRegularRelationshipRelation(table model.Table, allTable []model.Table) bool {
 	if len(table.PrimaryKeys) < 2 {
 		return false
@@ -43,14 +64,41 @@ func IsRegularRelationshipRelation(table model.Table, allTable []model.Table) bo
 	return count == len(table.PrimaryKeys)
 }
 
+func setDifference(subset []model.PrimaryKey, set []model.PrimaryKey) []model.PrimaryKey {
+	diff := []model.PrimaryKey{}
+
+	for _, s := range set {
+		if !helper.IsExistInPrimaryKeys(s.ColumnName, subset) {
+			diff = append(diff, s)
+		}
+	}
+
+	return diff
+}
+
 func isPKExistAsKeyInOtherTable(primaryKey []model.PrimaryKey, otherPrimaryKey []model.PrimaryKey) bool {
 	for _, pk := range primaryKey {
 		currPk := pk.ColumnName
 
 		for _, opk := range otherPrimaryKey {
-
 			if currPk == opk.ColumnName {
 				return true
+			}
+		}
+	}
+
+	return false
+}
+
+func isPKExistAsKeyInOtherEntityRelation(primaryKey []model.PrimaryKey, allTable []model.Table) bool {
+	for _, pk := range primaryKey {
+		currPk := pk.ColumnName
+
+		for _, at := range allTable {
+			if at.Type == "STRONG" || at.Type == "WEAK" {
+				if helper.IsExistInPrimaryKeys(currPk, at.PrimaryKeys) {
+					return true
+				}
 			}
 		}
 	}
