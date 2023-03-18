@@ -29,3 +29,13 @@ func IsExistInPrimaryKeys(str string, arr []model.PrimaryKey) bool {
 
 	return false
 }
+
+func IsExistInForeignKeys(str string, arr []model.ForeignKey) bool {
+	for _, a := range arr {
+		if str == a.ColumnName {
+			return true
+		}
+	}
+
+	return false
+}

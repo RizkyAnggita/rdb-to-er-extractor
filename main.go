@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"rdb-to-er-extractor/extract"
+	"rdb-to-er-extractor/inclusion"
 	"rdb-to-er-extractor/model"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -67,6 +68,7 @@ func main() {
 		table := model.Table{Name: tableName}
 		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, "classicmodels", tableName)
 		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, "classicmodels", tableName)
+		fmt.Println("KADIEU: ", table.ForeignKeys)
 		tables = append(tables, table)
 	}
 
@@ -96,7 +98,17 @@ func main() {
 		fmt.Println("FK: ", tables[i].ForeignKeys)
 		fmt.Println("DK: ", tables[i].DanglingKeys)
 		fmt.Println("____________________________")
+		// if tables[i].Name == "employees" || tables[i].Name == "offices" {
+		// tables[i].PrimaryKeys = []model.PrimaryKey{{ColumnName: "customerNumber"}}
+		// }
 	}
+
+	// res := inclusion.HeuristicSupertypeRelationship(tables)
+	res := inclusion.HeuristicByForeignKey(tables)
+	for _, r := range res {
+		fmt.Println("H: ", r)
+	}
+	// fmt.Println("RES: ", res)
 
 	// router.Run("localhost:8080")
 }

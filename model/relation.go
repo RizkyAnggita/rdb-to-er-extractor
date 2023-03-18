@@ -32,3 +32,10 @@ type Column struct {
 	Type     string
 	Nullable bool
 }
+
+type InclusionDependency struct {
+	RelationAName string
+	RelationBName string
+	KeyA          string
+	KeyB          string
+}
