@@ -106,6 +106,7 @@ func main() {
 
 	inclusionDependencies := []model.InclusionDependency{}
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
+	fmt.Println("SUPERTYPE: ", inclusionDependencies)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
 
@@ -151,6 +152,7 @@ func main() {
 
 	strongEntities := identification.IdentifyStrongEntities(tables)
 	weakEntities, relationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
+	relationship = append(relationship, identification.IdentifyInclusionRelationship(tables, inclusionDependencies)...)
 
 	for _, strong := range strongEntities {
 		fmt.Println("S: ", strong)

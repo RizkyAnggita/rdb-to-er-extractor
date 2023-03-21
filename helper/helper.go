@@ -30,6 +30,15 @@ func IsExistInPrimaryKeys(str string, arr []model.PrimaryKey) bool {
 	return false
 }
 
+func GetTableByTableName(name string, tables []model.Table) model.Table {
+	for _, t := range tables {
+		if t.Name == name {
+			return t
+		}
+	}
+	return model.Table{}
+}
+
 func IsExistInForeignKeys(str string, arr []model.ForeignKey) bool {
 	for _, a := range arr {
 		if str == a.ColumnName {
