@@ -19,7 +19,7 @@ func IdentifyInclusionRelationship(allTable []model.Table, inclDepend []model.In
 			if isKeyAPK && isKeyBPK {
 				relationship := model.Relationship{
 					Name:        relationA.Name + "-" + relationB.Name,
-					Type:        "BINARY",
+					Type:        "SPECIALIZATION",
 					Cardinality: "1-1",
 					EntityAName: relationA.Name,
 					EntityBName: relationB.Name,

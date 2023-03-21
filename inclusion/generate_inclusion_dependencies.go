@@ -41,12 +41,14 @@ func HeuristicRelationshipByForeignKey(arrTable []model.Table) (res []model.Incl
 			for j := 0; j < lenTable; j++ {
 				for _, pk := range pks {
 					if helper.IsExistInForeignKeys(pk.ColumnName, arrTable[j].ForeignKeys) && arrTable[i].Name != arrTable[j].Name {
-						res = append(res, model.InclusionDependency{
-							RelationAName: arrTable[j].Name,
-							RelationBName: arrTable[i].Name,
-							KeyA:          pk.ColumnName,
-							KeyB:          pk.ColumnName,
-						})
+						if !helper.IsExistInPrimaryKeys(pk.ColumnName, arrTable[j].PrimaryKeys) {
+							res = append(res, model.InclusionDependency{
+								RelationAName: arrTable[j].Name,
+								RelationBName: arrTable[i].Name,
+								KeyA:          pk.ColumnName,
+								KeyB:          pk.ColumnName,
+							})
+						}
 					} else {
 						for _, fk := range arrTable[j].ForeignKeys {
 							if pk.ColumnName == fk.ReferencedColumnName && pk.ColumnName != fk.ColumnName {
