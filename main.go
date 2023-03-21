@@ -103,11 +103,32 @@ func main() {
 		// }
 	}
 
-	// res := inclusion.HeuristicSupertypeRelationship(tables)
-	res := inclusion.HeuristicByForeignKey(tables)
-	for _, r := range res {
+	inclusionDependencies := []model.InclusionDependency{}
+	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
+	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
+	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
+
+	fmt.Println("BEFORE: ")
+	for _, r := range inclusionDependencies {
 		fmt.Println("H: ", r)
 	}
+
+	fmt.Println("AFTER:")
+	k := 0
+	for _, r := range inclusionDependencies {
+		fmt.Println("H: ", r)
+		isRejected, err := inclusion.IsRejectInclusionDependency(db, r)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if !isRejected {
+			inclusionDependencies[k] = r
+			k++
+		}
+	}
+	inclusionDependencies = inclusionDependencies[:k]
+
 	// fmt.Println("RES: ", res)
 
 	// router.Run("localhost:8080")

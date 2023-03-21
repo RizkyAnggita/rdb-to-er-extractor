@@ -39,3 +39,19 @@ func IsExistInForeignKeys(str string, arr []model.ForeignKey) bool {
 
 	return false
 }
+
+func IsSubset(setA, setB []string) bool {
+	checkSet := map[string]bool{}
+
+	for _, val := range setA {
+		checkSet[val] = true
+	}
+
+	for _, val := range setB {
+		if checkSet[val] {
+			delete(checkSet, val)
+		}
+	}
+
+	return len(checkSet) == 0
+}
