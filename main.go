@@ -143,6 +143,7 @@ func main() {
 	weakEntities, dependentRelationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
 	inclusionRelationship := identification.IdentifyInclusionRelationship(tables, inclusionDependencies)
 	binaryRelationship := identification.IdentifyBinaryRelationship(tables, inclusionDependencies)
+	binaryRelationship2 := identification.IdentifyRelationshipByRegularRelationshipRelation(tables, inclusionDependencies)
 
 	for _, strong := range strongEntities {
 		fmt.Println("S: ", strong)
@@ -162,6 +163,10 @@ func main() {
 
 	for _, br := range binaryRelationship {
 		fmt.Println("BR: ", br)
+	}
+
+	for _, br2 := range binaryRelationship2 {
+		fmt.Println("BR2: ", br2)
 	}
 
 	// fmt.Println("RES: ", res)
