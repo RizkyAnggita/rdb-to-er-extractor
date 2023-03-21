@@ -39,3 +39,8 @@ type InclusionDependency struct {
 	KeyA          string
 	KeyB          string
 }
+
+func (id InclusionDependency) IsEqualTo(other InclusionDependency) bool {
+	return id.KeyA == other.KeyA && id.KeyB == other.KeyB &&
+		id.RelationAName == other.RelationAName && id.RelationBName == other.RelationBName
+}

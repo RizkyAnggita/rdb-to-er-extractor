@@ -108,15 +108,14 @@ func main() {
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
 
-	fmt.Println("BEFORE: ")
+	fmt.Println("Inclusion Dependencies Generated: ")
 	for _, r := range inclusionDependencies {
 		fmt.Println("H: ", r)
 	}
 
-	fmt.Println("AFTER:")
+	fmt.Println("Reject Invalid Inclusion Dependencies")
 	k := 0
 	for _, r := range inclusionDependencies {
-		fmt.Println("H: ", r)
 		isRejected, err := inclusion.IsRejectInclusionDependency(db, r)
 		if err != nil {
 			panic(err.Error())
@@ -125,9 +124,27 @@ func main() {
 		if !isRejected {
 			inclusionDependencies[k] = r
 			k++
+		} else {
+			fmt.Println("THIS IS REJECTED: ", r)
 		}
 	}
 	inclusionDependencies = inclusionDependencies[:k]
+	for _, r := range inclusionDependencies {
+		fmt.Println("H: ", r)
+	}
+
+	// Remove Duplicate
+	fmt.Println("Remove Duplicate: ")
+	inclusionDependencies = inclusion.RemoveDuplicateInclDepend(inclusionDependencies)
+	for _, r := range inclusionDependencies {
+		fmt.Println("H: ", r)
+	}
+
+	fmt.Println("Remove Redundancy:")
+	inclusionDependencies = inclusion.RemoveRedundantInclDepend(db, inclusionDependencies)
+	for _, r := range inclusionDependencies {
+		fmt.Println("H: ", r)
+	}
 
 	// fmt.Println("RES: ", res)
 
