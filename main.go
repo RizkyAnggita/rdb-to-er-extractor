@@ -106,15 +106,10 @@ func main() {
 
 	inclusionDependencies := []model.InclusionDependency{}
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
-	fmt.Println("SUPERTYPE: ", inclusionDependencies)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
-	for _, r := range inclusionDependencies {
-		fmt.Println("H: ", r)
-	}
-
 	fmt.Println("Reject Invalid Inclusion Dependencies")
 	k := 0
 	for _, r := range inclusionDependencies {
@@ -131,28 +126,23 @@ func main() {
 		}
 	}
 	inclusionDependencies = inclusionDependencies[:k]
-	for _, r := range inclusionDependencies {
-		fmt.Println("H: ", r)
-	}
 
 	// Remove Duplicate
 	fmt.Println("Remove Duplicate: ")
 	inclusionDependencies = inclusion.RemoveDuplicateInclDepend(inclusionDependencies)
-	for _, r := range inclusionDependencies {
-		fmt.Println("H: ", r)
-	}
 
 	fmt.Println("Remove Redundancy:")
 	inclusionDependencies = inclusion.RemoveRedundantInclDepend(db, inclusionDependencies)
 	for _, r := range inclusionDependencies {
-		fmt.Println("H: ", r)
+		r.Print()
 	}
 
 	fmt.Println("_____")
 
 	strongEntities := identification.IdentifyStrongEntities(tables)
-	weakEntities, relationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
-	relationship = append(relationship, identification.IdentifyInclusionRelationship(tables, inclusionDependencies)...)
+	weakEntities, dependentRelationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
+	inclusionRelationship := identification.IdentifyInclusionRelationship(tables, inclusionDependencies)
+	binaryRelationship := identification.IdentifyBinaryRelationship(tables, inclusionDependencies)
 
 	for _, strong := range strongEntities {
 		fmt.Println("S: ", strong)
@@ -162,8 +152,16 @@ func main() {
 		fmt.Println("W: ", weak)
 	}
 
-	for _, r := range relationship {
-		fmt.Println("R: ", r)
+	for _, dr := range dependentRelationship {
+		fmt.Println("DR: ", dr)
+	}
+
+	for _, ir := range inclusionRelationship {
+		fmt.Println("IR: ", ir)
+	}
+
+	for _, br := range binaryRelationship {
+		fmt.Println("BR: ", br)
 	}
 
 	// fmt.Println("RES: ", res)
