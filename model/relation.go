@@ -1,5 +1,7 @@
 package model
 
+import "fmt"
+
 type Database struct {
 	Tables []Table
 }
@@ -64,4 +66,8 @@ type InclusionDependency struct {
 func (id InclusionDependency) IsEqualTo(other InclusionDependency) bool {
 	return id.KeyA == other.KeyA && id.KeyB == other.KeyB &&
 		id.RelationAName == other.RelationAName && id.RelationBName == other.RelationBName
+}
+
+func (id InclusionDependency) Print() {
+	fmt.Printf("ID: %s.%s << %s.%s\n", id.RelationAName, id.KeyA, id.RelationBName, id.KeyB)
 }
