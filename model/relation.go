@@ -27,6 +27,27 @@ type Table struct {
 	Type         string
 }
 
+type StrongEntity struct {
+	Name string
+	Type string
+	Keys []PrimaryKey
+}
+
+type WeakEntity struct {
+	Name            string
+	Type            string
+	Keys            []DanglingKey
+	OwnerEntityName string
+}
+
+type Relationship struct {
+	Name        string
+	Type        string
+	Cardinality string
+	EntityAName string
+	EntityBName string
+}
+
 type Column struct {
 	Name     string
 	Type     string

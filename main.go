@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"rdb-to-er-extractor/extract"
+	"rdb-to-er-extractor/identification"
 	"rdb-to-er-extractor/inclusion"
 	"rdb-to-er-extractor/model"
 
@@ -144,6 +145,23 @@ func main() {
 	inclusionDependencies = inclusion.RemoveRedundantInclDepend(db, inclusionDependencies)
 	for _, r := range inclusionDependencies {
 		fmt.Println("H: ", r)
+	}
+
+	fmt.Println("_____")
+
+	strongEntities := identification.IdentifyStrongEntities(tables)
+	weakEntities, relationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
+
+	for _, strong := range strongEntities {
+		fmt.Println("S: ", strong)
+	}
+
+	for _, weak := range weakEntities {
+		fmt.Println("W: ", weak)
+	}
+
+	for _, r := range relationship {
+		fmt.Println("R: ", r)
 	}
 
 	// fmt.Println("RES: ", res)
