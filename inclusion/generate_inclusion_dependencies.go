@@ -14,13 +14,20 @@ func HeuristicSupertypeRelationship(arrTable []model.Table) (res []model.Inclusi
 				if arrTable[j].Type == "STRONG" {
 					for _, pk := range pks {
 						if isExistInPK := helper.IsExistInPrimaryKeys(pk.ColumnName, arrTable[j].PrimaryKeys); isExistInPK {
-							inclusionDependency := model.InclusionDependency{
+							inclusionDependencyAxBx := model.InclusionDependency{
 								RelationAName: arrTable[i].Name,
 								RelationBName: arrTable[j].Name,
 								KeyA:          pk.ColumnName,
 								KeyB:          pk.ColumnName,
 							}
-							res = append(res, inclusionDependency)
+
+							inclusionDependencyBxAx := model.InclusionDependency{
+								RelationAName: arrTable[j].Name,
+								RelationBName: arrTable[i].Name,
+								KeyA:          pk.ColumnName,
+								KeyB:          pk.ColumnName,
+							}
+							res = append(res, inclusionDependencyAxBx, inclusionDependencyBxAx)
 						}
 					}
 				}
@@ -40,7 +47,10 @@ func HeuristicRelationshipByForeignKey(arrTable []model.Table) (res []model.Incl
 			pks := arrTable[i].PrimaryKeys
 			for j := 0; j < lenTable; j++ {
 				for _, pk := range pks {
-					if helper.IsExistInForeignKeys(pk.ColumnName, arrTable[j].ForeignKeys) && arrTable[i].Name != arrTable[j].Name {
+					// Basically, check if current key is foreign key in other tables BUT make sure that this key is not also a foreign
+					// key itself, meaning that the current key is referring to other table, hence it's an invalid inclusion dependency
+					if helper.IsExistInForeignKeys(pk.ColumnName, arrTable[j].ForeignKeys) && arrTable[i].Name != arrTable[j].Name &&
+						!helper.IsExistInForeignKeys(pk.ColumnName, arrTable[i].ForeignKeys) {
 						if !helper.IsExistInPrimaryKeys(pk.ColumnName, arrTable[j].PrimaryKeys) {
 							res = append(res, model.InclusionDependency{
 								RelationAName: arrTable[j].Name,
