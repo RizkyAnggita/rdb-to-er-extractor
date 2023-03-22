@@ -27,3 +27,20 @@ CREATE TABLE Programmer (
   NumProjects INT,
   FOREIGN KEY (SSN) REFERENCES Employee(SSN)
 ) ENGINE=InnoDB;
+
+
+INSERT INTO Employee (SSN, Name, Birthdate, Gender, Hiredate, JobTitle, Salary) 
+VALUES 
+  (111223333, 'John Smith', '1990-01-01', 'Male', '2018-01-01', 'Software Engineer', 80000),
+  (222334444, 'Jane Doe', '1995-05-05', 'Female', '2020-01-01', 'Manager', 120000),
+  (333445555, 'Bob Johnson', '1985-10-10', 'Male', '2015-01-01', 'Programmer', 90000);
+
+-- Insert data into the "Manager" table
+INSERT INTO Manager (SSN, NumEmployees)
+VALUES
+  (222334444, 10);
+
+-- Insert data into the "Programmer" table
+INSERT INTO Programmer (SSN, NumProjects)
+VALUES
+  (333445555, 5);
