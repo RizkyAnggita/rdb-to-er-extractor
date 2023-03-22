@@ -64,3 +64,21 @@ func IsSubset(setA, setB []string) bool {
 
 	return len(checkSet) == 0
 }
+
+// SetDifference returns the elements in `setA` that aren't in `setB`.
+func SetDifference(setA []string, setB []string) []string {
+	mapDiff := map[string]bool{}
+	diffStr := []string{}
+
+	for _, s := range setB {
+		mapDiff[s] = true
+	}
+
+	for _, s := range setA {
+		if _, isExist := mapDiff[s]; !isExist {
+			diffStr = append(diffStr, s)
+		}
+	}
+
+	return diffStr
+}

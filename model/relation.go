@@ -42,6 +42,14 @@ type WeakEntity struct {
 	OwnerEntityName string
 }
 
+type AssociativeEntity struct {
+	Name        string
+	Type        string
+	Keys        []PrimaryKey
+	EntityAName string
+	EntityBName string
+}
+
 type Relationship struct {
 	Name        string
 	Type        string

@@ -54,7 +54,7 @@ func main() {
 	username := "root"
 	password := "regars2000"
 	dbType := "mysql"
-	dbName := "classicmodels"
+	dbName := "my_school"
 
 	db, err := sql.Open(dbType, username+":"+password+"@tcp(localhost:3306)/"+dbName)
 	if err != nil {
@@ -88,7 +88,6 @@ func main() {
 
 	for i := 0; i < len(tables); i++ {
 		if tables[i].Type == "" {
-			fmt.Println("MASUK: ", tables[i].Name)
 			extract.ClassifyRegularRelationshipRelation(&tables[i], tables)
 		}
 	}
@@ -167,7 +166,7 @@ func main() {
 	weakEntities, dependentRelationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
 	inclusionRelationship := identification.IdentifyInclusionRelationship(tables, inclusionDependencies)
 	binaryRelationship := identification.IdentifyBinaryRelationship(tables, inclusionDependencies)
-	binaryRelationship2 := identification.IdentifyRelationshipByRegularRelationshipRelation(tables, inclusionDependencies)
+	binaryRelationship2, associativeEntities := identification.IdentifyRelationshipByRegularRelationshipRelation(tables, inclusionDependencies)
 
 	for _, strong := range strongEntities {
 		fmt.Println("S: ", strong)
@@ -175,6 +174,10 @@ func main() {
 
 	for _, weak := range weakEntities {
 		fmt.Println("W: ", weak)
+	}
+
+	for _, asc := range associativeEntities {
+		fmt.Println("ASC: ", asc)
 	}
 
 	for _, dr := range dependentRelationship {
