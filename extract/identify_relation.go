@@ -40,7 +40,16 @@ func ClassifyWeakRelation(table *model.Table, allTable []model.Table) {
 			remainingPK := setDifference(subSet, table.PrimaryKeys)
 
 			isRemainingPKExistOther := isPKExistAsKeyInOtherEntityRelation(remainingPK, allTable)
-			if !isRemainingPKExistOther {
+			if isRemainingPKExistOther {
+				return
+			} else {
+				// check if the K2 has different name from the primary key in other relation
+				for _, pk := range remainingPK {
+					// if the key from remaining PK is a foreign key, meaning that it's exist in other relation
+					if helper.IsExistInForeignKeys(pk.ColumnName, table.ForeignKeys) {
+						return
+					}
+				}
 				for _, key := range remainingPK {
 					table.DanglingKeys = append(table.DanglingKeys, model.DanglingKey{ColumnName: key.ColumnName})
 				}
@@ -58,10 +67,23 @@ func ClassifyRegularRelationshipRelation(table *model.Table, allTable []model.Ta
 	}
 
 	count := 0
+	pks := table.PrimaryKeys
 
 	for _, t := range allTable {
 		if t.Name != table.Name && (t.Type == "STRONG" || t.Type == "WEAK") {
-			if isAppear := isPKExistAsKeyInOtherTable(table.PrimaryKeys, t.PrimaryKeys); isAppear {
+			for i := 0; i < len(pks); i++ {
+				if helper.IsExistInPrimaryKeys(pks[i].ColumnName, t.PrimaryKeys) {
+					count += 1
+					pks = append(pks[:i], pks[i+1:]...)
+					i = i - 1
+				}
+			}
+		}
+	}
+
+	if len(pks) != 0 {
+		for _, pk := range pks {
+			if helper.IsExistInForeignKeys(pk.ColumnName, table.ForeignKeys) {
 				count += 1
 			}
 		}

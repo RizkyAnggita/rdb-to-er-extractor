@@ -88,6 +88,7 @@ func main() {
 
 	for i := 0; i < len(tables); i++ {
 		if tables[i].Type == "" {
+			fmt.Println("MASUK: ", tables[i].Name)
 			extract.ClassifyRegularRelationshipRelation(&tables[i], tables)
 		}
 	}
@@ -106,10 +107,27 @@ func main() {
 	}
 
 	inclusionDependencies := []model.InclusionDependency{}
+
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
-	fmt.Println("SUPERTYPE: ", inclusionDependencies)
-	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
-	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
+	fmt.Println("SUPERTYPE: ")
+	for _, r := range inclusionDependencies {
+		r.Print()
+	}
+
+	inclusionDependencies2 := inclusion.HeuristicRelationshipByForeignKey(tables)
+	fmt.Println("FOREIGN: ")
+	for _, r := range inclusionDependencies2 {
+		r.Print()
+	}
+
+	inclusionDependencies3 := inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)
+	fmt.Println("REGULAR: ")
+	for _, r := range inclusionDependencies3 {
+		r.Print()
+	}
+
+	inclusionDependencies = append(inclusionDependencies, inclusionDependencies2...)
+	inclusionDependencies = append(inclusionDependencies, inclusionDependencies3...)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
 	for _, r := range inclusionDependencies {

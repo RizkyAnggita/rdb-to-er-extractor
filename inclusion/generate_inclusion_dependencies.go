@@ -61,7 +61,8 @@ func HeuristicRelationshipByForeignKey(arrTable []model.Table) (res []model.Incl
 						}
 					} else {
 						for _, fk := range arrTable[j].ForeignKeys {
-							if pk.ColumnName == fk.ReferencedColumnName && pk.ColumnName != fk.ColumnName {
+							if pk.ColumnName == fk.ReferencedColumnName && pk.ColumnName != fk.ColumnName &&
+								fk.ReferencedTableName == arrTable[i].Name {
 								res = append(res, model.InclusionDependency{
 									RelationAName: arrTable[j].Name,
 									RelationBName: arrTable[i].Name,

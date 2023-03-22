@@ -10,7 +10,7 @@ import (
 func RemoveRedundantInclDepend(db *sql.DB, inclDependencies []model.InclusionDependency) []model.InclusionDependency {
 
 	for i := 0; i < len(inclDependencies); i++ {
-		for j := 0; j < len(inclDependencies); j++ {
+		for j := 0; j < len(inclDependencies) && i >= 0; j++ {
 			b := inclDependencies[i].RelationBName
 			bx := inclDependencies[i].KeyB
 			b2 := inclDependencies[j].RelationAName
