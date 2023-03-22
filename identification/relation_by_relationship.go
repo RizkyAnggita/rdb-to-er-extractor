@@ -19,8 +19,8 @@ func IdentifyRelationshipByRegularRelationshipRelation(arrTable []model.Table, i
 					Name:        t.Name,
 					Type:        "BINARY",
 					Cardinality: "N-N",
-					EntityAName: tInclDepend[0].RelationAName,
-					EntityBName: tInclDepend[0].RelationBName,
+					EntityAName: tInclDepend[0].RelationBName,
+					EntityBName: tInclDepend[1].RelationBName,
 				}
 
 				relationships = append(relationships, relationship)
