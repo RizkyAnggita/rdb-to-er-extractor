@@ -54,21 +54,22 @@ func main() {
 	username := "root"
 	password := "regars2000"
 	dbType := "mysql"
+	dbName := "classicmodels"
 
-	db, err := sql.Open(dbType, username+":"+password+"@tcp(localhost:3306)/classicmodels")
+	db, err := sql.Open(dbType, username+":"+password+"@tcp(localhost:3306)/"+dbName)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer db.Close()
 
-	tableNames := extract.GetAllTables(db, "classicmodels")
+	tableNames := extract.GetAllTables(db, dbName)
 	tables := []model.Table{}
 
 	for _, tableName := range tableNames {
 		table := model.Table{Name: tableName}
-		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, "classicmodels", tableName)
-		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, "classicmodels", tableName)
+		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, dbName, tableName)
+		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, dbName, tableName)
 		fmt.Println("KADIEU: ", table.ForeignKeys)
 		tables = append(tables, table)
 	}
@@ -106,10 +107,15 @@ func main() {
 
 	inclusionDependencies := []model.InclusionDependency{}
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
+	fmt.Println("SUPERTYPE: ", inclusionDependencies)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationshipByForeignKey(tables)...)
 	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)...)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
+	for _, r := range inclusionDependencies {
+		r.Print()
+	}
+
 	fmt.Println("Reject Invalid Inclusion Dependencies")
 	k := 0
 	for _, r := range inclusionDependencies {

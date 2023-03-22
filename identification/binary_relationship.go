@@ -13,32 +13,35 @@ func IdentifyBinaryRelationship(allTable []model.Table, inclDepend []model.Inclu
 
 		if relationA.Type == "STRONG" || relationA.Type == "WEAK" {
 			if relationB.Type == "STRONG" || relationB.Type == "WEAK" {
-				isKeyBKeyInA := helper.IsExistInPrimaryKeys(id.KeyA, relationA.PrimaryKeys)
-				if isKeyBKeyInA {
+				// Check if keyA is purely Foreign Key (not also a primary key which break the rule)
+				if helper.IsExistInForeignKeys(id.KeyA, relationB.ForeignKeys) && !helper.IsExistInPrimaryKeys(id.KeyA, relationB.PrimaryKeys) {
+					// Check if foreign key from relationB is a primary key in relationA
+					isKeyBKeyInA := helper.IsExistInPrimaryKeys(id.KeyA, relationA.PrimaryKeys)
+					if isKeyBKeyInA {
+						relationship := model.Relationship{
+							Name:        id.KeyA + "-" + relationA.Name + "-" + relationB.Name,
+							Type:        "BINARY",
+							Cardinality: "1-N",
+							EntityAName: relationA.Name,
+							EntityBName: relationB.Name,
+						}
 
-					relationship := model.Relationship{
-						Name:        id.KeyA + "-" + relationA.Name + "-" + relationB.Name,
-						Type:        "BINARY",
-						Cardinality: "1-N",
-						EntityAName: relationA.Name,
-						EntityBName: relationB.Name,
-					}
+						relationships = append(relationships, relationship)
+					} else {
+						// Kasus ketika nama column Foreign Key berbeda dengan nama kolom primary key
+						for _, fk := range relationB.ForeignKeys {
+							if fk.ColumnName == id.KeyA {
+								if fk.ReferencedTableName == relationA.Name && helper.IsExistInPrimaryKeys(fk.ReferencedColumnName, relationA.PrimaryKeys) {
+									relationship := model.Relationship{
+										Name:        fk.ColumnName + "-" + relationA.Name + "-" + relationB.Name,
+										Type:        "BINARY",
+										Cardinality: "1-N",
+										EntityAName: relationA.Name,
+										EntityBName: relationB.Name,
+									}
 
-					relationships = append(relationships, relationship)
-				} else {
-					// Kasus ketika nama column Foreign Key berbeda dengan nama kolom primary key
-					for _, fk := range relationB.ForeignKeys {
-						if fk.ColumnName == id.KeyA {
-							if fk.ReferencedTableName == relationA.Name && helper.IsExistInPrimaryKeys(fk.ReferencedColumnName, relationA.PrimaryKeys) {
-								relationship := model.Relationship{
-									Name:        fk.ColumnName + "-" + relationA.Name + "-" + relationB.Name,
-									Type:        "BINARY",
-									Cardinality: "1-N",
-									EntityAName: relationA.Name,
-									EntityBName: relationB.Name,
+									relationships = append(relationships, relationship)
 								}
-
-								relationships = append(relationships, relationship)
 							}
 						}
 					}
