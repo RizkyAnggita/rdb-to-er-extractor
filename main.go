@@ -60,112 +60,22 @@ func main() {
 func convertRDBtoEERModel(c *gin.Context) {
 	username := "root"
 	password := "regars2000"
+	url := "localhost"
+	port := "3306"
 	dbType := "mysql"
 	dbName := "my_school"
 
-	db, err := sql.Open(dbType, username+":"+password+"@tcp(localhost:3306)/"+dbName)
+	db, err := sql.Open(dbType, username+":"+password+"@tcp("+url+":"+port+")/"+dbName)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	defer db.Close()
 
-	tableNames := extract.GetAllTables(db, dbName)
-	tables := []model.Table{}
-
-	for _, tableName := range tableNames {
-		table := model.Table{Name: tableName}
-		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, dbName, tableName)
-		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, dbName, tableName)
-		fmt.Println("KADIEU: ", table.ForeignKeys)
-		tables = append(tables, table)
-	}
-
-	for i := 0; i < len(tables); i++ {
-		if tables[i].Type == "" {
-			extract.ClassifyStrongRelation(&tables[i], tables)
-		}
-	}
-
-	for i := 0; i < len(tables); i++ {
-		if tables[i].Type == "" {
-			extract.ClassifyWeakRelation(&tables[i], tables)
-		}
-	}
-
-	for i := 0; i < len(tables); i++ {
-		if tables[i].Type == "" {
-			extract.ClassifyRegularRelationshipRelation(&tables[i], tables)
-		}
-	}
-
-	for i := 0; i < len(tables); i++ {
-		fmt.Println("____________________________")
-		fmt.Println("NAME: ", tables[i].Name)
-		fmt.Println("TYPE: ", tables[i].Type)
-		fmt.Println("PK: ", tables[i].PrimaryKeys)
-		fmt.Println("FK: ", tables[i].ForeignKeys)
-		fmt.Println("DK: ", tables[i].DanglingKeys)
-		fmt.Println("____________________________")
-		// if tables[i].Name == "employees" || tables[i].Name == "offices" {
-		// tables[i].PrimaryKeys = []model.PrimaryKey{{ColumnName: "customerNumber"}}
-		// }
-	}
-
-	inclusionDependencies := []model.InclusionDependency{}
-
-	inclusionDependencies = append(inclusionDependencies, inclusion.HeuristicSupertypeRelationship(tables)...)
-	fmt.Println("SUPERTYPE: ")
-	for _, r := range inclusionDependencies {
-		r.Print()
-	}
-
-	inclusionDependencies2 := inclusion.HeuristicRelationshipByForeignKey(tables)
-	fmt.Println("FOREIGN: ")
-	for _, r := range inclusionDependencies2 {
-		r.Print()
-	}
-
-	inclusionDependencies3 := inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)
-	fmt.Println("REGULAR: ")
-	for _, r := range inclusionDependencies3 {
-		r.Print()
-	}
-
-	inclusionDependencies = append(inclusionDependencies, inclusionDependencies2...)
-	inclusionDependencies = append(inclusionDependencies, inclusionDependencies3...)
+	tables := GenerateRelationsFromTables(db, dbName)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
-	for _, r := range inclusionDependencies {
-		r.Print()
-	}
-
-	fmt.Println("Reject Invalid Inclusion Dependencies")
-	k := 0
-	for _, r := range inclusionDependencies {
-		isRejected, err := inclusion.IsRejectInclusionDependency(db, r)
-		if err != nil {
-			panic(err.Error())
-		}
-
-		if !isRejected {
-			inclusionDependencies[k] = r
-			k++
-		} else {
-			fmt.Println("THIS IS REJECTED: ", r)
-		}
-	}
-	inclusionDependencies = inclusionDependencies[:k]
-
-	// Remove Duplicate
-	fmt.Println("Remove Duplicate: ")
-	inclusionDependencies = inclusion.RemoveDuplicateInclDepend(inclusionDependencies)
-
-	fmt.Println("Remove Redundancy:")
-	inclusionDependencies = inclusion.RemoveRedundantInclDepend(db, inclusionDependencies)
-	for _, r := range inclusionDependencies {
-		r.Print()
-	}
+	inclusionDependencies := GenerateInclusionDependencies(db, tables)
 
 	fmt.Println("_____")
 
@@ -363,7 +273,6 @@ func convertRDBtoEERModel(c *gin.Context) {
 			nodesData = append(nodesData, pkAttrib)
 			linkData = append(linkData, link)
 		}
-
 	}
 
 	for _, dr := range dependentRelationship {
@@ -475,4 +384,103 @@ func convertRDBtoEERModel(c *gin.Context) {
 	ERModel.LinkDataArray = linkData
 
 	c.JSON(http.StatusOK, ERModel)
+}
+
+func GenerateRelationsFromTables(db *sql.DB, dbName string) []model.Table {
+	tableNames := extract.GetAllTables(db, dbName)
+	tables := []model.Table{}
+
+	for _, tableName := range tableNames {
+		table := model.Table{Name: tableName}
+		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, dbName, tableName)
+		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, dbName, tableName)
+		tables = append(tables, table)
+	}
+
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "" {
+			extract.ClassifyStrongRelation(&tables[i], tables)
+		}
+	}
+
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "" {
+			extract.ClassifyWeakRelation(&tables[i], tables)
+		}
+	}
+
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "" {
+			extract.ClassifyRegularRelationshipRelation(&tables[i], tables)
+		}
+	}
+
+	for i := 0; i < len(tables); i++ {
+		fmt.Println("____________________________")
+		fmt.Println("NAME: ", tables[i].Name)
+		fmt.Println("TYPE: ", tables[i].Type)
+		fmt.Println("PK: ", tables[i].PrimaryKeys)
+		fmt.Println("FK: ", tables[i].ForeignKeys)
+		fmt.Println("DK: ", tables[i].DanglingKeys)
+		fmt.Println("____________________________")
+	}
+
+	return tables
+}
+
+func GenerateInclusionDependencies(db *sql.DB, tables []model.Table) []model.InclusionDependency {
+	ids := []model.InclusionDependency{}
+
+	ids = append(ids, inclusion.HeuristicSupertypeRelationship(tables)...)
+	fmt.Println("SUPERTYPE: ")
+	for _, r := range ids {
+		r.Print()
+	}
+
+	ids2 := inclusion.HeuristicRelationshipByForeignKey(tables)
+	fmt.Println("FOREIGN: ")
+	for _, r := range ids2 {
+		r.Print()
+	}
+
+	ids3 := inclusion.HeuristicRelationShipOwnerAndParticipatingEntity(tables)
+	fmt.Println("REGULAR: ")
+	for _, r := range ids3 {
+		r.Print()
+	}
+
+	ids = append(ids, ids2...)
+	ids = append(ids, ids3...)
+
+	for _, r := range ids {
+		r.Print()
+	}
+
+	fmt.Println("Reject Invalid Inclusion Dependencies")
+	k := 0
+	for _, r := range ids {
+		isRejected, err := inclusion.IsRejectInclusionDependency(db, r)
+		if err != nil {
+			panic(err.Error())
+		}
+
+		if !isRejected {
+			ids[k] = r
+			k++
+		} else {
+			fmt.Println("THIS IS REJECTED: ", r)
+		}
+	}
+	ids = ids[:k]
+
+	// Remove Duplicate
+	fmt.Println("Remove Duplicate: ")
+	ids = inclusion.RemoveDuplicateInclDepend(ids)
+
+	fmt.Println("Remove Redundancy:")
+	ids = inclusion.RemoveRedundantInclDepend(db, ids)
+	for _, r := range ids {
+		r.Print()
+	}
+	return ids
 }
