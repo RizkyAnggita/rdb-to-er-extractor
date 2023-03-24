@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"net/http"
 	"rdb-to-er-extractor/extract"
+	"rdb-to-er-extractor/helper"
 	"rdb-to-er-extractor/identification"
 	"rdb-to-er-extractor/inclusion"
 	"rdb-to-er-extractor/model"
 
+	"github.com/gin-contrib/cors"
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/gin-gonic/gin"
@@ -28,10 +30,6 @@ var albums = []album{
 	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 }
 
-func getAlbums(c *gin.Context) {
-	c.JSON(http.StatusOK, albums)
-}
-
 func postAlbums(c *gin.Context) {
 	var newAlbum album
 
@@ -48,9 +46,18 @@ func postAlbums(c *gin.Context) {
 
 func main() {
 	router := gin.Default()
-	router.GET("/albums", getAlbums)
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	router.Use(cors.New(config))
 	router.POST("/albums", postAlbums)
+	router.GET("/albums", convertRDBtoEERModel)
 
+	// fmt.Println("RES: ", res)
+
+	router.Run("localhost:8080")
+}
+
+func convertRDBtoEERModel(c *gin.Context) {
 	username := "root"
 	password := "regars2000"
 	dbType := "mysql"
@@ -168,35 +175,220 @@ func main() {
 	binaryRelationship := identification.IdentifyBinaryRelationship(tables, inclusionDependencies)
 	binaryRelationship2, associativeEntities := identification.IdentifyRelationshipByRegularRelationshipRelation(tables, inclusionDependencies)
 
+	mapNameKey := map[string]int{}
+	keyCounter := 1
+
 	for _, strong := range strongEntities {
 		fmt.Println("S: ", strong)
+		mapNameKey[strong.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, weak := range weakEntities {
 		fmt.Println("W: ", weak)
+		mapNameKey[weak.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, asc := range associativeEntities {
 		fmt.Println("ASC: ", asc)
+		mapNameKey[asc.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, dr := range dependentRelationship {
 		fmt.Println("DR: ", dr)
+		mapNameKey[dr.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, ir := range inclusionRelationship {
 		fmt.Println("IR: ", ir)
+		mapNameKey[ir.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, br := range binaryRelationship {
 		fmt.Println("BR: ", br)
+		mapNameKey[br.Name] = keyCounter
+		keyCounter += 1
 	}
 
 	for _, br2 := range binaryRelationship2 {
 		fmt.Println("BR2: ", br2)
+		mapNameKey[br2.Name] = keyCounter
+		keyCounter += 1
 	}
 
-	// fmt.Println("RES: ", res)
+	ERModel := model.ERModel{}
+	nodesData := []model.Node{}
+	linkData := []model.Link{}
 
-	// router.Run("localhost:8080")
+	for _, e := range strongEntities {
+		node := model.Node{
+			Text:                 e.Name,
+			Color:                "black",
+			Figure:               "Rectangle",
+			Width:                90,
+			Height:               50,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[e.Name],
+			Location:             "-431.0127868652344 -80.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+	}
+
+	for _, w := range weakEntities {
+		node := model.Node{
+			Text:                 w.Name,
+			Color:                "black",
+			Figure:               "DoubleRectangle",
+			Width:                90,
+			Height:               50,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[w.Name],
+			Location:             "-231.0127868652344 -60.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+	}
+
+	for _, asc := range associativeEntities {
+		node := model.Node{
+			Text:                 asc.Name,
+			Color:                "black",
+			Figure:               "AssociativeRectangle",
+			Width:                90,
+			Height:               50,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[asc.Name],
+			Location:             "-331.0127868652344 -60.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+
+		entityA := helper.GetTableByTableName(asc.EntityAName, tables)
+		entityB := helper.GetTableByTableName(asc.EntityBName, tables)
+		link1 := model.Link{
+			From: mapNameKey[entityA.Name],
+			To:   node.Key,
+			Text: "",
+		}
+
+		link2 := model.Link{
+			From: node.Key,
+			To:   mapNameKey[entityB.Name],
+			Text: "",
+		}
+		linkData = append(linkData, link1, link2)
+	}
+
+	for _, dr := range dependentRelationship {
+		node := model.Node{
+			Text:                 dr.Name,
+			Color:                "black",
+			Figure:               "DoubleDiamond",
+			Width:                120,
+			Height:               50,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[dr.Name],
+			Location:             "-131.0127868652344 -40.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+
+		ownerEntity := helper.GetTableByTableName(dr.EntityAName, tables)
+		weakEntity := helper.GetTableByTableName(dr.EntityBName, tables)
+		link1 := model.Link{
+			From:  mapNameKey[ownerEntity.Name],
+			To:    node.Key,
+			Text:  "",
+			IsOne: true,
+		}
+
+		link2 := model.Link{
+			From: node.Key,
+			To:   mapNameKey[weakEntity.Name],
+			Text: "",
+		}
+		linkData = append(linkData, link1, link2)
+	}
+
+	for _, br := range binaryRelationship {
+		node := model.Node{
+			Text:                 br.Name,
+			Color:                "black",
+			Figure:               "Diamond",
+			Width:                130,
+			Height:               70,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[br.Name],
+			Location:             "-251.0127868652344 -20.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+
+		relationA := helper.GetTableByTableName(br.EntityAName, tables)
+		relationB := helper.GetTableByTableName(br.EntityBName, tables)
+		link1 := model.Link{
+			From:  mapNameKey[relationA.Name],
+			To:    node.Key,
+			Text:  "",
+			IsOne: true,
+		}
+
+		link2 := model.Link{
+			From: node.Key,
+			To:   mapNameKey[relationB.Name],
+			Text: "",
+		}
+		linkData = append(linkData, link1, link2)
+	}
+
+	for _, br := range binaryRelationship2 {
+		node := model.Node{
+			Text:                 br.Name,
+			Color:                "black",
+			Figure:               "Diamond",
+			Width:                130,
+			Height:               70,
+			FromLinkable:         false,
+			ToLinkableDuplicates: true,
+			Key:                  mapNameKey[br.Name],
+			Location:             "-331.0127868652344 -50.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+
+		relationA := helper.GetTableByTableName(br.EntityAName, tables)
+		relationB := helper.GetTableByTableName(br.EntityBName, tables)
+		link1 := model.Link{
+			From:  mapNameKey[relationA.Name],
+			To:    node.Key,
+			Text:  "",
+			IsOne: false,
+		}
+
+		link2 := model.Link{
+			From:  node.Key,
+			To:    mapNameKey[relationB.Name],
+			Text:  "",
+			IsOne: false,
+		}
+		linkData = append(linkData, link1, link2)
+	}
+
+	for _, node := range nodesData {
+		fmt.Println("N: ", node)
+	}
+
+	for _, link := range linkData {
+		fmt.Println("LINK: ", link)
+	}
+
+	ERModel.Class = "GraphLinksModel"
+	ERModel.NodeDataArray = nodesData
+	ERModel.LinkDataArray = linkData
+
+	c.JSON(http.StatusOK, ERModel)
 }
