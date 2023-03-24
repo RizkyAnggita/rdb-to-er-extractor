@@ -16,6 +16,8 @@ type Node struct {
 	ToLinkableDuplicates bool   `json:"toLinkableDuplicates"`
 	Key                  int    `json:"key"`
 	Location             string `json:"location"`
+	FromMaxLinks         int    `json:"fromMaxLinks"`
+	Underline            bool   `json:"underline"`
 }
 
 type Link struct {

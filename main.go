@@ -182,18 +182,30 @@ func convertRDBtoEERModel(c *gin.Context) {
 		fmt.Println("S: ", strong)
 		mapNameKey[strong.Name] = keyCounter
 		keyCounter += 1
+		for _, pk := range strong.Keys {
+			mapNameKey[strong.Name+pk.ColumnName] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	for _, weak := range weakEntities {
 		fmt.Println("W: ", weak)
 		mapNameKey[weak.Name] = keyCounter
 		keyCounter += 1
+		for _, dk := range weak.Keys {
+			mapNameKey[weak.Name+dk.ColumnName] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	for _, asc := range associativeEntities {
 		fmt.Println("ASC: ", asc)
 		mapNameKey[asc.Name] = keyCounter
 		keyCounter += 1
+		for _, pk := range asc.Keys {
+			mapNameKey[asc.Name+pk.ColumnName] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	for _, dr := range dependentRelationship {
@@ -225,7 +237,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 	linkData := []model.Link{}
 
 	for _, e := range strongEntities {
-		node := model.Node{
+		entity := model.Node{
 			Text:                 e.Name,
 			Color:                "black",
 			Figure:               "Rectangle",
@@ -236,11 +248,35 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Key:                  mapNameKey[e.Name],
 			Location:             "-431.0127868652344 -80.75775146484375",
 		}
-		nodesData = append(nodesData, node)
+		nodesData = append(nodesData, entity)
+
+		for _, pk := range e.Keys {
+			pkAttrib := model.Node{
+				Text:         pk.ColumnName,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[e.Name+pk.ColumnName],
+				Location:     "-431.0127868652344 -80.75775146484375",
+				Underline:    true,
+			}
+
+			link := model.Link{
+				From: pkAttrib.Key,
+				To:   entity.Key,
+				Text: "",
+			}
+			linkData = append(linkData, link)
+
+			nodesData = append(nodesData, pkAttrib)
+		}
+
 	}
 
 	for _, w := range weakEntities {
-		node := model.Node{
+		weakEntity := model.Node{
 			Text:                 w.Name,
 			Color:                "black",
 			Figure:               "DoubleRectangle",
@@ -251,11 +287,34 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Key:                  mapNameKey[w.Name],
 			Location:             "-231.0127868652344 -60.75775146484375",
 		}
-		nodesData = append(nodesData, node)
+		nodesData = append(nodesData, weakEntity)
+
+		for _, dk := range w.Keys {
+			dkAttrib := model.Node{
+				Text:         dk.ColumnName,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[w.Name+dk.ColumnName],
+				Location:     "-431.0127868652344 -80.75775146484375",
+				Underline:    true,
+			}
+
+			link := model.Link{
+				From: dkAttrib.Key,
+				To:   weakEntity.Key,
+				Text: "",
+			}
+			nodesData = append(nodesData, dkAttrib)
+			linkData = append(linkData, link)
+		}
+
 	}
 
 	for _, asc := range associativeEntities {
-		node := model.Node{
+		ascEntity := model.Node{
 			Text:                 asc.Name,
 			Color:                "black",
 			Figure:               "AssociativeRectangle",
@@ -266,22 +325,45 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Key:                  mapNameKey[asc.Name],
 			Location:             "-331.0127868652344 -60.75775146484375",
 		}
-		nodesData = append(nodesData, node)
+		nodesData = append(nodesData, ascEntity)
 
 		entityA := helper.GetTableByTableName(asc.EntityAName, tables)
 		entityB := helper.GetTableByTableName(asc.EntityBName, tables)
 		link1 := model.Link{
-			From: mapNameKey[entityA.Name],
-			To:   node.Key,
+			From: ascEntity.Key,
+			To:   mapNameKey[entityA.Name],
 			Text: "",
 		}
 
 		link2 := model.Link{
-			From: node.Key,
+			From: ascEntity.Key,
 			To:   mapNameKey[entityB.Name],
 			Text: "",
 		}
+
 		linkData = append(linkData, link1, link2)
+		for _, pk := range asc.Keys {
+			pkAttrib := model.Node{
+				Text:         pk.ColumnName,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[asc.Name+pk.ColumnName],
+				Location:     "-431.0127868652344 -80.75775146484375",
+				Underline:    true,
+			}
+
+			link := model.Link{
+				From: pkAttrib.Key,
+				To:   ascEntity.Key,
+				Text: "",
+			}
+			nodesData = append(nodesData, pkAttrib)
+			linkData = append(linkData, link)
+		}
+
 	}
 
 	for _, dr := range dependentRelationship {
@@ -301,8 +383,8 @@ func convertRDBtoEERModel(c *gin.Context) {
 		ownerEntity := helper.GetTableByTableName(dr.EntityAName, tables)
 		weakEntity := helper.GetTableByTableName(dr.EntityBName, tables)
 		link1 := model.Link{
-			From:  mapNameKey[ownerEntity.Name],
-			To:    node.Key,
+			From:  node.Key,
+			To:    mapNameKey[ownerEntity.Name],
 			Text:  "",
 			IsOne: true,
 		}
@@ -324,6 +406,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Height:               70,
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
+			FromMaxLinks:         2,
 			Key:                  mapNameKey[br.Name],
 			Location:             "-251.0127868652344 -20.75775146484375",
 		}
@@ -332,8 +415,8 @@ func convertRDBtoEERModel(c *gin.Context) {
 		relationA := helper.GetTableByTableName(br.EntityAName, tables)
 		relationB := helper.GetTableByTableName(br.EntityBName, tables)
 		link1 := model.Link{
-			From:  mapNameKey[relationA.Name],
-			To:    node.Key,
+			From:  node.Key,
+			To:    mapNameKey[relationA.Name],
 			Text:  "",
 			IsOne: true,
 		}
@@ -355,6 +438,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Height:               70,
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
+			FromMaxLinks:         2,
 			Key:                  mapNameKey[br.Name],
 			Location:             "-331.0127868652344 -50.75775146484375",
 		}
@@ -363,8 +447,8 @@ func convertRDBtoEERModel(c *gin.Context) {
 		relationA := helper.GetTableByTableName(br.EntityAName, tables)
 		relationB := helper.GetTableByTableName(br.EntityBName, tables)
 		link1 := model.Link{
-			From:  mapNameKey[relationA.Name],
-			To:    node.Key,
+			From:  node.Key,
+			To:    mapNameKey[relationA.Name],
 			Text:  "",
 			IsOne: false,
 		}
