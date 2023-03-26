@@ -12,6 +12,7 @@ import (
 
 	"github.com/gin-contrib/cors"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 
 	"github.com/gin-gonic/gin"
 )
@@ -57,7 +58,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		dataSourceName = username + ":" + password + "@tcp(" + url + ":" + port + ")/" + dbName
 	} else if driverParams == "PostgreSQL" {
 		driver = "postgres"
-		dataSourceName = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", url, port, username, password, dbName)
+		dataSourceName = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, url, port, dbName)
 	}
 
 	db, err := sql.Open(driver, dataSourceName)
@@ -67,7 +68,12 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	defer db.Close()
 
-	tables := GenerateRelationsFromTables(db, dbName)
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	tables := GenerateRelationsFromTables(db, driver, dbName)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
 	inclusionDependencies := GenerateInclusionDependencies(db, tables)
@@ -381,14 +387,16 @@ func convertRDBtoEERModel(c *gin.Context) {
 	c.JSON(http.StatusOK, ERModel)
 }
 
-func GenerateRelationsFromTables(db *sql.DB, dbName string) []model.Table {
-	tableNames := extract.GetAllTables(db, dbName)
+func GenerateRelationsFromTables(db *sql.DB, driver, dbName string) []model.Table {
+	tableNames := extract.GetAllTables(db, driver, dbName)
+	fmt.Println("TABLES: ", tableNames)
+
 	tables := []model.Table{}
 
 	for _, tableName := range tableNames {
 		table := model.Table{Name: tableName}
-		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, dbName, tableName)
-		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, dbName, tableName)
+		table.PrimaryKeys = extract.GetPrimaryKeyFromRelation(db, dbName, driver, tableName)
+		table.ForeignKeys = extract.GetForeignKeyFromRelation(db, dbName, driver, tableName)
 		tables = append(tables, table)
 	}
 

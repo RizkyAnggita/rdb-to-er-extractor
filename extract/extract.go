@@ -6,8 +6,15 @@ import (
 	"rdb-to-er-extractor/model"
 )
 
-func GetAllTables(db *sql.DB, dbName string) (tables []string) {
-	rows, err := db.Query("SELECT TABLE_NAME from information_schema.TABLES t where TABLE_SCHEMA = ?", dbName)
+func GetAllTables(db *sql.DB, driver, dbName string) (tables []string) {
+	query := ""
+	if driver == "mysql" {
+		query = `SELECT TABLE_NAME from information_schema.TABLES t where TABLE_SCHEMA = ?;`
+	} else if driver == "postgres" {
+		query = `SELECT TABLE_NAME from information_schema.TABLES t WHERE table_schema='public' AND table_type='BASE TABLE';`
+	}
+
+	rows, err := db.Query(query, dbName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -26,13 +33,22 @@ func GetAllTables(db *sql.DB, dbName string) (tables []string) {
 	return
 }
 
-func GetPrimaryKeyFromRelation(db *sql.DB, dbName, relationName string) (primaryKeyColumns []model.PrimaryKey) {
+func GetPrimaryKeyFromRelation(db *sql.DB, dbName, driver, relationName string) (primaryKeyColumns []model.PrimaryKey) {
+	whereQuery := ""
+	if driver == "mysql" {
+		whereQuery = ` WHERE TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = "PRIMARY KEY";`
+	} else if driver == "postgres" {
+		whereQuery = ` WHERE TABLE_SCHEMA = $1 AND tc.TABLE_NAME = $2 AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';`
+		dbName = "public"
+	}
+
 	rows, err := db.Query(`
 		SELECT kcu.COLUMN_NAME 
 		FROM information_schema.TABLE_CONSTRAINTS tc 
-		JOIN information_schema.KEY_COLUMN_USAGE kcu USING(constraint_name, table_schema, table_name) 
-		WHERE TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = "PRIMARY KEY";`,
+		JOIN information_schema.KEY_COLUMN_USAGE kcu USING(constraint_name, table_schema, table_name)
+		`+whereQuery,
 		dbName, relationName)
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -51,7 +67,7 @@ func GetPrimaryKeyFromRelation(db *sql.DB, dbName, relationName string) (primary
 	return
 }
 
-func GetForeignKeyFromRelation(db *sql.DB, dbName, relationName string) (foreignKeyColumns []model.ForeignKey) {
+func GetForeignKeyFromRelation(db *sql.DB, dbName, driver, relationName string) (foreignKeyColumns []model.ForeignKey) {
 	rows, err := db.Query(`
 		SELECT kcu.COLUMN_NAME, kcu.REFERENCED_TABLE_NAME, kcu.REFERENCED_COLUMN_NAME 
 		FROM information_schema.KEY_COLUMN_USAGE kcu 
