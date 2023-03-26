@@ -22,6 +22,7 @@ type ExtractERParams struct {
 	DBName   string `json:"dbName"`
 	Port     string `json:"port"`
 	URL      string `json:"url"`
+	Driver   string `json:"driver"`
 }
 
 func main() {
@@ -46,10 +47,20 @@ func convertRDBtoEERModel(c *gin.Context) {
 	password := params.Password
 	url := params.URL
 	port := params.Port
-	dbType := "mysql"
+	driverParams := params.Driver
 	dbName := params.DBName
 
-	db, err := sql.Open(dbType, username+":"+password+"@tcp("+url+":"+port+")/"+dbName)
+	driver := ""
+	dataSourceName := ""
+	if driverParams == "MySQL" {
+		driver = "mysql"
+		dataSourceName = username + ":" + password + "@tcp(" + url + ":" + port + ")/" + dbName
+	} else if driverParams == "PostgreSQL" {
+		driver = "postgres"
+		dataSourceName = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", url, port, username, password, dbName)
+	}
+
+	db, err := sql.Open(driver, dataSourceName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})
 	}
@@ -140,7 +151,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
 			Key:                  mapNameKey[e.Name],
-			Location:             "-431.0127868652344 -80.75775146484375",
+			Location:             "-100 -100.75775146484375",
 		}
 		nodesData = append(nodesData, entity)
 
@@ -153,7 +164,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Height:       30,
 				Width:        10,
 				Key:          mapNameKey[e.Name+pk.ColumnName],
-				Location:     "-431.0127868652344 -80.75775146484375",
+				Location:     "-150.0127868652344 -100.75775146484375",
 				Underline:    true,
 			}
 
@@ -217,7 +228,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
 			Key:                  mapNameKey[asc.Name],
-			Location:             "-331.0127868652344 -60.75775146484375",
+			Location:             "-200.0127868652344 -60.75775146484375",
 		}
 		nodesData = append(nodesData, ascEntity)
 
