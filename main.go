@@ -389,8 +389,6 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 func GenerateRelationsFromTables(db *sql.DB, driver, dbName string) []model.Table {
 	tableNames := extract.GetAllTables(db, driver, dbName)
-	fmt.Println("TABLES: ", tableNames)
-
 	tables := []model.Table{}
 
 	for _, tableName := range tableNames {
