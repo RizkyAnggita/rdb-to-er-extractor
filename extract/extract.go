@@ -120,3 +120,38 @@ func GetForeignKeyFromRelation(db *sql.DB, dbName, driver, relationName string) 
 
 	return
 }
+
+func GetColumnsFromRelation(db *sql.DB, dbName, driver, relationName string) (columns []model.Column) {
+	whereQuery := ""
+	param1 := ""
+	param2 := relationName
+
+	if driver == "mysql" {
+		whereQuery = ` WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ?;`
+		param1 = dbName
+
+	} else if driver == "postgres" {
+		whereQuery = ` WHERE TABLE_SCHEMA = $1 AND TABLE_NAME = $2;`
+		param1 = `public`
+	}
+
+	rows, err := db.Query(`SELECT column_name from information_schema.columns c`+whereQuery, param1, param2)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	for rows.Next() {
+		var row model.Column
+		if err := rows.Scan(&row.Name); err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+
+		columns = append(columns, row)
+	}
+
+	return
+
+}

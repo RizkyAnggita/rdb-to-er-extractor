@@ -74,6 +74,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 	}
 
 	tables := GenerateRelationsFromTables(db, driver, dbName)
+	tables = GetNonKeyColumnsFromTables(db, driver, dbName, tables)
 
 	fmt.Println("Inclusion Dependencies Generated: ")
 	inclusionDependencies := GenerateInclusionDependencies(db, tables)
@@ -484,4 +485,24 @@ func GenerateInclusionDependencies(db *sql.DB, tables []model.Table) []model.Inc
 		r.Print()
 	}
 	return ids
+}
+
+func GetNonKeyColumnsFromTables(db *sql.DB, driver string, dbName string, tables []model.Table) []model.Table {
+	for idx, table := range tables {
+		columns := extract.GetColumnsFromRelation(db, dbName, driver, table.Name)
+		tables[idx].Columns = append(tables[idx].Columns, columns...)
+	}
+
+	for i := 0; i < len(tables); i++ {
+		for j := 0; j < len(tables[i].Columns); j++ {
+			colToCheck := tables[i].Columns[j]
+			if helper.IsExistInPrimaryKeys(colToCheck.Name, tables[i].PrimaryKeys) ||
+				helper.IsExistInForeignKeys(colToCheck.Name, tables[i].ForeignKeys) {
+				tables[i].Columns = append(tables[i].Columns[:j], tables[i].Columns[j+1:]...)
+				j = j - 1
+			}
+		}
+	}
+
+	return tables
 }
