@@ -42,9 +42,10 @@ type Relationships struct {
 }
 
 type StrongEntity struct {
-	Name string
-	Type string
-	Keys []PrimaryKey
+	Name    string
+	Type    string
+	Keys    []PrimaryKey
+	Columns []Column
 }
 
 type WeakEntity struct {
@@ -52,6 +53,7 @@ type WeakEntity struct {
 	Type            string
 	Keys            []DanglingKey
 	OwnerEntityName string
+	Columns         []Column
 }
 
 type AssociativeEntity struct {
@@ -60,6 +62,7 @@ type AssociativeEntity struct {
 	Keys        []PrimaryKey
 	EntityAName string
 	EntityBName string
+	Columns     []Column
 }
 
 type Relationship struct {
@@ -68,6 +71,7 @@ type Relationship struct {
 	Cardinality string
 	EntityAName string
 	EntityBName string
+	Columns     []Column
 }
 
 type Column struct {

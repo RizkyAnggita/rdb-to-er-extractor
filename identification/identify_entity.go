@@ -10,7 +10,7 @@ func IdentifyStrongEntities(allTable []model.Table) []model.StrongEntity {
 
 	for _, t := range allTable {
 		if t.Type == "STRONG" {
-			temp := model.StrongEntity{Name: t.Name, Type: t.Type}
+			temp := model.StrongEntity{Name: t.Name, Type: t.Type, Columns: t.Columns}
 			temp.Keys = t.PrimaryKeys
 			res = append(res, temp)
 		}
@@ -39,6 +39,7 @@ func IdentifyWeakEntities(allTable []model.Table, inclDepend []model.InclusionDe
 									Type:            t.Type,
 									Keys:            t.DanglingKeys,
 									OwnerEntityName: ownerEntityName,
+									Columns:         t.Columns,
 								}
 								relationship := model.Relationship{
 									Name:        "DEPENDENT",

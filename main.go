@@ -94,6 +94,11 @@ func convertRDBtoEERModel(c *gin.Context) {
 			mapNameKey[strong.Name+pk.ColumnName] = keyCounter
 			keyCounter += 1
 		}
+
+		for _, col := range strong.Columns {
+			mapNameKey[strong.Name+col.Name] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	for _, weak := range entities.WeakEntities {
@@ -104,6 +109,10 @@ func convertRDBtoEERModel(c *gin.Context) {
 			mapNameKey[weak.Name+dk.ColumnName] = keyCounter
 			keyCounter += 1
 		}
+		for _, col := range weak.Columns {
+			mapNameKey[weak.Name+col.Name] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	for _, asc := range entities.AssociativeEntities {
@@ -112,6 +121,10 @@ func convertRDBtoEERModel(c *gin.Context) {
 		keyCounter += 1
 		for _, pk := range asc.Keys {
 			mapNameKey[asc.Name+pk.ColumnName] = keyCounter
+			keyCounter += 1
+		}
+		for _, col := range asc.Columns {
+			mapNameKey[asc.Name+col.Name] = keyCounter
 			keyCounter += 1
 		}
 	}
@@ -132,6 +145,10 @@ func convertRDBtoEERModel(c *gin.Context) {
 		fmt.Println("BR: ", br)
 		mapNameKey[br.Name] = keyCounter
 		keyCounter += 1
+		for _, col := range br.Columns {
+			mapNameKey[br.Name+col.Name] = keyCounter
+			keyCounter += 1
+		}
 	}
 
 	ERModel := model.ERModel{}
@@ -175,6 +192,28 @@ func convertRDBtoEERModel(c *gin.Context) {
 			nodesData = append(nodesData, pkAttrib)
 		}
 
+		for _, col := range e.Columns {
+			colAttrib := model.Node{
+				Text:         col.Name,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[e.Name+col.Name],
+				Location:     "-150.0127868652344 -100.75775146484375",
+			}
+
+			link := model.Link{
+				From: colAttrib.Key,
+				To:   entity.Key,
+				Text: "",
+			}
+			linkData = append(linkData, link)
+
+			nodesData = append(nodesData, colAttrib)
+		}
+
 	}
 
 	for _, w := range entities.WeakEntities {
@@ -211,6 +250,28 @@ func convertRDBtoEERModel(c *gin.Context) {
 			}
 			nodesData = append(nodesData, dkAttrib)
 			linkData = append(linkData, link)
+		}
+
+		for _, col := range w.Columns {
+			colAttrib := model.Node{
+				Text:         col.Name,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[w.Name+col.Name],
+				Location:     "-150.0127868652344 -100.75775146484375",
+			}
+
+			link := model.Link{
+				From: colAttrib.Key,
+				To:   weakEntity.Key,
+				Text: "",
+			}
+			linkData = append(linkData, link)
+
+			nodesData = append(nodesData, colAttrib)
 		}
 
 	}
@@ -328,6 +389,29 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Text: "",
 		}
 		linkData = append(linkData, link1, link2)
+
+		for _, col := range br.Columns {
+			colAttrib := model.Node{
+				Text:         col.Name,
+				Color:        "black",
+				Figure:       "Ellipse",
+				FromMaxLinks: 1,
+				Height:       30,
+				Width:        10,
+				Key:          mapNameKey[br.Name+col.Name],
+				Location:     "-150.0127868652344 -100.75775146484375",
+			}
+
+			link := model.Link{
+				From: colAttrib.Key,
+				To:   node.Key,
+				Text: "",
+			}
+			linkData = append(linkData, link)
+
+			nodesData = append(nodesData, colAttrib)
+		}
+
 	}
 
 	for _, node := range nodesData {
