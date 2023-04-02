@@ -81,16 +81,12 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	fmt.Println("_____")
 
-	strongEntities := identification.IdentifyStrongEntities(tables)
-	weakEntities, dependentRelationship := identification.IdentifyWeakEntities(tables, inclusionDependencies)
-	inclusionRelationship := identification.IdentifyInclusionRelationship(tables, inclusionDependencies)
-	binaryRelationship := identification.IdentifyBinaryRelationship(tables, inclusionDependencies)
-	binaryRelationship2, associativeEntities := identification.IdentifyRelationshipByRegularRelationshipRelation(tables, inclusionDependencies)
+	entities, relationships := identification.IdentifyEntitiesAndRelationship(tables, inclusionDependencies)
 
 	mapNameKey := map[string]int{}
 	keyCounter := 1
 
-	for _, strong := range strongEntities {
+	for _, strong := range entities.StrongEntities {
 		fmt.Println("S: ", strong)
 		mapNameKey[strong.Name] = keyCounter
 		keyCounter += 1
@@ -100,7 +96,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 	}
 
-	for _, weak := range weakEntities {
+	for _, weak := range entities.WeakEntities {
 		fmt.Println("W: ", weak)
 		mapNameKey[weak.Name] = keyCounter
 		keyCounter += 1
@@ -110,7 +106,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 	}
 
-	for _, asc := range associativeEntities {
+	for _, asc := range entities.AssociativeEntities {
 		fmt.Println("ASC: ", asc)
 		mapNameKey[asc.Name] = keyCounter
 		keyCounter += 1
@@ -120,27 +116,21 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 	}
 
-	for _, dr := range dependentRelationship {
+	for _, dr := range relationships.DependentRelationships {
 		fmt.Println("DR: ", dr)
 		mapNameKey[dr.Name] = keyCounter
 		keyCounter += 1
 	}
 
-	for _, ir := range inclusionRelationship {
+	for _, ir := range relationships.InclusionRelationships {
 		fmt.Println("IR: ", ir)
 		mapNameKey[ir.Name] = keyCounter
 		keyCounter += 1
 	}
 
-	for _, br := range binaryRelationship {
+	for _, br := range relationships.BinaryRelationships {
 		fmt.Println("BR: ", br)
 		mapNameKey[br.Name] = keyCounter
-		keyCounter += 1
-	}
-
-	for _, br2 := range binaryRelationship2 {
-		fmt.Println("BR2: ", br2)
-		mapNameKey[br2.Name] = keyCounter
 		keyCounter += 1
 	}
 
@@ -148,7 +138,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 	nodesData := []model.Node{}
 	linkData := []model.Link{}
 
-	for _, e := range strongEntities {
+	for _, e := range entities.StrongEntities {
 		entity := model.Node{
 			Text:                 e.Name,
 			Color:                "black",
@@ -187,7 +177,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	}
 
-	for _, w := range weakEntities {
+	for _, w := range entities.WeakEntities {
 		weakEntity := model.Node{
 			Text:                 w.Name,
 			Color:                "black",
@@ -225,7 +215,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	}
 
-	for _, asc := range associativeEntities {
+	for _, asc := range entities.AssociativeEntities {
 		ascEntity := model.Node{
 			Text:                 asc.Name,
 			Color:                "black",
@@ -277,7 +267,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 	}
 
-	for _, dr := range dependentRelationship {
+	for _, dr := range relationships.DependentRelationships {
 		node := model.Node{
 			Text:                 dr.Name,
 			Color:                "black",
@@ -308,7 +298,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		linkData = append(linkData, link1, link2)
 	}
 
-	for _, br := range binaryRelationship {
+	for _, br := range relationships.BinaryRelationships {
 		node := model.Node{
 			Text:                 br.Name,
 			Color:                "black",
@@ -329,46 +319,13 @@ func convertRDBtoEERModel(c *gin.Context) {
 			From:  node.Key,
 			To:    mapNameKey[relationA.Name],
 			Text:  "",
-			IsOne: true,
+			IsOne: br.Cardinality != "N-N",
 		}
 
 		link2 := model.Link{
 			From: node.Key,
 			To:   mapNameKey[relationB.Name],
 			Text: "",
-		}
-		linkData = append(linkData, link1, link2)
-	}
-
-	for _, br := range binaryRelationship2 {
-		node := model.Node{
-			Text:                 br.Name,
-			Color:                "black",
-			Figure:               "Diamond",
-			Width:                130,
-			Height:               70,
-			FromLinkable:         false,
-			ToLinkableDuplicates: true,
-			FromMaxLinks:         2,
-			Key:                  mapNameKey[br.Name],
-			Location:             "-331.0127868652344 -50.75775146484375",
-		}
-		nodesData = append(nodesData, node)
-
-		relationA := helper.GetTableByTableName(br.EntityAName, tables)
-		relationB := helper.GetTableByTableName(br.EntityBName, tables)
-		link1 := model.Link{
-			From:  node.Key,
-			To:    mapNameKey[relationA.Name],
-			Text:  "",
-			IsOne: false,
-		}
-
-		link2 := model.Link{
-			From:  node.Key,
-			To:    mapNameKey[relationB.Name],
-			Text:  "",
-			IsOne: false,
 		}
 		linkData = append(linkData, link1, link2)
 	}

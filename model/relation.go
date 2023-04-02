@@ -29,6 +29,18 @@ type Table struct {
 	Type         string
 }
 
+type Entities struct {
+	StrongEntities      []StrongEntity
+	WeakEntities        []WeakEntity
+	AssociativeEntities []AssociativeEntity
+}
+
+type Relationships struct {
+	BinaryRelationships    []Relationship
+	InclusionRelationships []Relationship
+	DependentRelationships []Relationship
+}
+
 type StrongEntity struct {
 	Name string
 	Type string
