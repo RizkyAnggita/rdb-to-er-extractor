@@ -82,7 +82,7 @@ func GetForeignKeyFromRelation(db *sql.DB, dbName, driver, relationName string) 
 		FROM 
 			information_schema.KEY_COLUMN_USAGE kcu 
 		JOIN 
-			information_schema.REFERENTIAL_CONSTRAINTS rc USING(constraint_name)
+			information_schema.REFERENTIAL_CONSTRAINTS rc USING(constraint_name, constraint_schema)
 		WHERE kcu.REFERENCED_TABLE_NAME IS NOT NULL AND kcu.TABLE_SCHEMA = ? AND kcu.TABLE_NAME=?`
 		param1 = dbName
 		param2 = relationName
@@ -116,6 +116,11 @@ func GetForeignKeyFromRelation(db *sql.DB, dbName, driver, relationName string) 
 		}
 
 		foreignKeyColumns = append(foreignKeyColumns, row)
+	}
+
+	if relationName == "employees" {
+		fmt.Println("KADIEU")
+		fmt.Println(foreignKeyColumns)
 	}
 
 	return
