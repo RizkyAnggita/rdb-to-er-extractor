@@ -67,7 +67,11 @@ func ClassifyRegularRelationshipRelation(table *model.Table, allTable []model.Ta
 	}
 
 	count := 0
-	pks := table.PrimaryKeys
+	pks := []model.PrimaryKey{}
+
+	for _, pk := range table.PrimaryKeys {
+		pks = append(pks, pk)
+	}
 
 	for _, t := range allTable {
 		if t.Name != table.Name && (t.Type == "STRONG" || t.Type == "WEAK") {

@@ -118,11 +118,6 @@ func GetForeignKeyFromRelation(db *sql.DB, dbName, driver, relationName string) 
 		foreignKeyColumns = append(foreignKeyColumns, row)
 	}
 
-	if relationName == "employees" {
-		fmt.Println("KADIEU")
-		fmt.Println(foreignKeyColumns)
-	}
-
 	return
 }
 
