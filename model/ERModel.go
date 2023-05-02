@@ -13,6 +13,7 @@ type Node struct {
 	Width                int    `json:"widht"`
 	Height               int    `json:"height"`
 	FromLinkable         bool   `json:"fromLinkable"`
+	ToLinkable           bool   `json:"toLinkable"`
 	ToLinkableDuplicates bool   `json:"toLinkableDuplicates"`
 	Key                  int    `json:"key"`
 	Location             string `json:"location"`
@@ -21,9 +22,11 @@ type Node struct {
 }
 
 type Link struct {
-	From    int    `json:"from"`
-	To      int    `json:"to"`
-	Text    string `json:"text"`
-	IsTotal bool   `json:"isTotal"`
-	IsOne   bool   `json:"isOne"`
+	From       int    `json:"from"`
+	To         int    `json:"to"`
+	Text       string `json:"text"`
+	IsTotal    bool   `json:"isTotal"`
+	IsParent   bool   `json:"isParent"`
+	IsOne      bool   `json:"isOne"`
+	IsDisjoint bool   `json:"isDisjoint"`
 }

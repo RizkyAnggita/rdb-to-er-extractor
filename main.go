@@ -414,6 +414,76 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	}
 
+	parentsInclusion := map[string][]string{}
+
+	for _, ir := range relationships.InclusionRelationships {
+		if _, isExist := parentsInclusion[ir.EntityBName]; isExist {
+			parentsInclusion[ir.EntityBName] = append(parentsInclusion[ir.EntityBName], ir.EntityAName)
+		} else {
+			parentsInclusion[ir.EntityBName] = []string{ir.EntityAName}
+		}
+	}
+
+	for k, v := range parentsInclusion {
+		mapNameKey["Specialization"+k] = keyCounter
+		keyCounter += 1
+		node := model.Node{
+			Text:       "Specialization",
+			Color:      "black",
+			Figure:     "TriangleDown",
+			Width:      130,
+			Height:     70,
+			ToLinkable: false,
+			Key:        mapNameKey["Specialization"+k],
+			Location:   "-251.0127868652344 -20.75775146484375",
+		}
+		nodesData = append(nodesData, node)
+
+		// connect new node, "specialization" to parent
+		parentKey := mapNameKey[k]
+		link := model.Link{
+			From:     node.Key,
+			To:       parentKey,
+			Text:     "",
+			IsParent: true,
+		}
+		linkData = append(linkData, link)
+
+		for _, child := range v {
+			childKey := mapNameKey[child]
+			link := model.Link{
+				From: node.Key,
+				To:   childKey,
+				Text: "",
+			}
+			linkData = append(linkData, link)
+			// remove key from child
+			nodesToRemove := []int{}
+
+			for i := 0; i < len(linkData); i++ {
+				if linkData[i].To == childKey {
+					nodesToRemove = append(nodesToRemove, linkData[i].From)
+				}
+			}
+
+			for _, node := range nodesToRemove {
+				for i := 0; i < len(nodesData); i++ {
+					if nodesData[i].Key == node && nodesData[i].Underline {
+						for j := 0; j < len(linkData); j++ {
+							if linkData[j].From == nodesData[i].Key && linkData[j].To == childKey {
+								linkData = append(linkData[:j], linkData[j+1:]...)
+								break
+							}
+						}
+						nodesData = append(nodesData[:i], nodesData[i+1:]...)
+						break
+					}
+				}
+			}
+
+		}
+	}
+
 	for _, node := range nodesData {
 		fmt.Println("N: ", node)
 	}
