@@ -75,8 +75,9 @@ type Relationship struct {
 }
 
 type Column struct {
-	Name string
-	Type string
+	Name          string
+	Type          string
+	IsMultivalues bool
 }
 
 type InclusionDependency struct {

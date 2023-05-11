@@ -76,6 +76,27 @@ func convertRDBtoEERModel(c *gin.Context) {
 	tables := GenerateRelationsFromTables(db, driver, dbName)
 	tables = GetNonKeyColumnsFromTables(db, driver, dbName, tables)
 
+	// Convert Weak Entities with only 2 columns, into multivalues attributes
+	for i := 0; i < len(tables); i++ {
+		if tables[i].Type == "WEAK" && len(tables[i].Columns) == 0 && len(tables[i].PrimaryKeys) == 2 {
+			// 2 columns -> one is PK, one is FK, means no other columns other than that
+			// we can classify as multivalues attribute that belongs to an entity (strong or weak)
+			ownerEntityName := tables[i].ForeignKeys[0].ReferencedTableName
+			multivaluesAttr := model.Column{
+				Name:          tables[i].Name,
+				IsMultivalues: true,
+			}
+
+			for j := 0; j < len(tables); j++ {
+				if tables[j].Name == ownerEntityName {
+					tables[j].Columns = append(tables[j].Columns, multivaluesAttr)
+				}
+			}
+			tables = append(tables[:i], tables[i+1:]...)
+
+		}
+	}
+
 	fmt.Println("Inclusion Dependencies Generated: ")
 	inclusionDependencies := GenerateInclusionDependencies(db, tables)
 
@@ -193,10 +214,14 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 
 		for _, col := range e.Columns {
+			figure := "Ellipse"
+			if col.IsMultivalues {
+				figure = "Ring"
+			}
 			colAttrib := model.Node{
 				Text:         col.Name,
 				Color:        "black",
-				Figure:       "Ellipse",
+				Figure:       figure,
 				FromMaxLinks: 1,
 				Height:       30,
 				Width:        10,
@@ -253,10 +278,14 @@ func convertRDBtoEERModel(c *gin.Context) {
 		}
 
 		for _, col := range w.Columns {
+			figure := "Ellipse"
+			if col.IsMultivalues {
+				figure = "Ring"
+			}
 			colAttrib := model.Node{
 				Text:         col.Name,
 				Color:        "black",
-				Figure:       "Ellipse",
+				Figure:       figure,
 				FromMaxLinks: 1,
 				Height:       30,
 				Width:        10,

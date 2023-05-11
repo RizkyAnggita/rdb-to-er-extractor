@@ -1,6 +1,8 @@
 package identification
 
-import "rdb-to-er-extractor/model"
+import (
+	"rdb-to-er-extractor/model"
+)
 
 func IdentifyEntitiesAndRelationship(tables []model.Table, inclusionDependencies []model.InclusionDependency) (entities model.Entities, relationships model.Relationships) {
 	strongEntities := IdentifyStrongEntities(tables)
