@@ -26,10 +26,16 @@ CREATE TABLE employees (
 CREATE TABLE customers (
   customerNumber INT(11) NOT NULL,
   customerName VARCHAR(50) NOT NULL,
-  phone VARCHAR(50) NOT NULL,
   salesRepEmployeeNumber INT(11),
   PRIMARY KEY (customerNumber),
   FOREIGN KEY (salesRepEmployeeNumber) REFERENCES employees(employeeNumber)
+);
+
+CREATE TABLE customer_phones (
+  customerNumber INT(11) NOT NULL,
+  phoneNumber VARCHAR(50) NOT NULL,
+  PRIMARY KEY (customerNumber, phoneNumber),
+  FOREIGN KEY (customerNumber) REFERENCES customers(customerNumber)
 );
 
 -- Creating the payments table
@@ -133,16 +139,34 @@ INSERT INTO staff (employeeNumber, shift) VALUES
 
 
 INSERT INTO customers (customerNumber, customerName, phone, salesRepEmployeeNumber) VALUES
-(103, 'Atelier graphique', '40.32.2555', 1401),
-(112, 'Signal Gift Stores', '7025551838', 1401),
-(114, 'Australian Collectors, Co.', '03 9520 4555', 1401),
-(119, 'La Rochelle Gifts', '40.67.8555', 1401),
-(121, 'Baane Mini Imports', '07-98 9555', 1401),
-(124, 'Mini Gifts Distributors Ltd.', '4155551450', 1504),
-(125, 'Havel & Zbyszek Co', '+48 22 555 55 55', 1504),
-(128, 'Blauer See Auto, Co.', '6155558276', 1504),
-(129, 'Mini Wheels Co.', '6505555787', 1504),
-(131, 'Land of Toys Inc.', '2125557818', 1504);
+(103, 'Atelier graphique', 1401),
+(112, 'Signal Gift Stores', 1401),
+(114, 'Australian Collectors, Co.', 1401),
+(119, 'La Rochelle Gifts', 1401),
+(121, 'Baane Mini Imports', 1401),
+(124, 'Mini Gifts Distributors Ltd.', 1504),
+(125, 'Havel & Zbyszek Co', 1504),
+(128, 'Blauer See Auto, Co.', 1504),
+(129, 'Mini Wheels Co.', 1504),
+(131, 'Land of Toys Inc.', 1504);
+
+INSERT INTO customer_phones (customerNumber, phoneNumber) VALUES 
+(103, '123-456-7890'),
+(103, '987-654-3210'),
+(112, '555-555-5555'),
+(112, '123-456-7890'),
+(112, '111-111-1111'),
+(114, '555-555-5555'),
+(119, '555-555-5555'),
+(121, '123-456-7890'),
+(121, '987-654-3210'),
+(124, '111-111-1111'),
+(125, '555-555-5555'),
+(128, '555-555-5555'),
+(129, '123-456-7890'),
+(129, '987-654-3210'),
+(131, '123-456-7890'),
+(131, '111-111-1111');
 
 -- Populating the payments table
 INSERT INTO payments (customerNumber, checkNumber, paymentDate, amount)
