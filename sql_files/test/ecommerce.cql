@@ -51,7 +51,7 @@ CREATE TABLE manager (
 
 DROP TABLE IF EXISTS customers;
 CREATE TABLE customers (
-  phone TEXT,
+  customer_phones LIST<TEXT>,
   customerName TEXT,
   customerNumber INT,
   managed_customers INT,
@@ -192,16 +192,16 @@ INSERT INTO staff (employeenumber, shift) VALUES (1401,	'Evening');
 INSERT INTO staff (employeenumber, shift) VALUES (1504,	'Morning');
 
 
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (103, 'Atelier graphique', '40.32.2555', 1401);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (112, 'Signal Gift Stores', '7025551838', 1401);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (114, 'Australian Collectors Co.', '03 9520 4555', 1401);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (119, 'La Rochelle Gifts', '40.67.8555', 1401);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (121, 'Baane Mini Imports', '07-98 9555', 1401);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (124, 'Mini Gifts Distributors Ltd.', '4155551450', 1504);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (125, 'Havel & Zbyszek Co', '+48 22 555 55 55', 1504);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (128, 'Blauer See Auto, Co.', '6155558276', 1504);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (129, 'Mini Wheels Co.', '6505555787', 1504);
-INSERT INTO customers (customernumber, customername, phone, managed_customers) VALUES (131, 'Land of Toys Inc.', '2125557818', 1504);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (103, 'Atelier graphique', ['123-456-7890', '987-654-3210'], 1401);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (112, 'Signal Gift Stores', ['111-111-1111', '123-456-7890', '555-555-5555'], 1401);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (114, 'Australian Collectors Co.', ['555-555-5555'], 1401);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (119, 'La Rochelle Gifts', ['555-555-5555'], 1401);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (121, 'Baane Mini Imports', ['123-456-7890', '987-654-3210'], 1401);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (124, 'Mini Gifts Distributors Ltd.', ['11-111-1111'], 1504);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (125, 'Havel & Zbyszek Co', ['555-555-5555'], 1504);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (128, 'Blauer See Auto, Co.', ['555-555-5555'], 1504);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (129, 'Mini Wheels Co.', ['123-456-7890', '987-654-3210'], 1504);
+INSERT INTO customers (customernumber, customername, customer_phones, managed_customers) VALUES (131, 'Land of Toys Inc.', ['111-111-1111', '123-456-7890'], 1504);
 
 INSERT INTO managed_customers (employeenumber, customers) VALUES (1401, 103);
 INSERT INTO managed_customers (employeenumber, customers) VALUES (1401, 112);
