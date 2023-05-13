@@ -8,16 +8,19 @@ type Database struct {
 
 type ForeignKey struct {
 	ColumnName           string
+	Type                 string
 	ReferencedTableName  string
 	ReferencedColumnName string
 }
 
 type PrimaryKey struct {
 	ColumnName string
+	Type       string
 }
 
 type DanglingKey struct {
 	ColumnName string
+	Type       string
 }
 
 type Table struct {
@@ -77,6 +80,7 @@ type Relationship struct {
 type Column struct {
 	Name          string
 	Type          string
+	IsNullable    string
 	IsMultivalues bool
 }
 

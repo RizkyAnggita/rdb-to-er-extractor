@@ -51,7 +51,7 @@ func ClassifyWeakRelation(table *model.Table, allTable []model.Table) {
 					}
 				}
 				for _, key := range remainingPK {
-					table.DanglingKeys = append(table.DanglingKeys, model.DanglingKey{ColumnName: key.ColumnName})
+					table.DanglingKeys = append(table.DanglingKeys, model.DanglingKey{ColumnName: key.ColumnName, Type: key.Type})
 				}
 				table.Type = "WEAK"
 				return

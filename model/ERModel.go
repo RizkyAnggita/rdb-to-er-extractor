@@ -19,6 +19,7 @@ type Node struct {
 	Location             string `json:"location"`
 	FromMaxLinks         int    `json:"fromMaxLinks"`
 	Underline            bool   `json:"underline"`
+	DataType             string `json:"dataType"`
 }
 
 type Link struct {

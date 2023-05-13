@@ -201,6 +201,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Key:          mapNameKey[e.Name+pk.ColumnName],
 				Location:     "-150.0127868652344 -100.75775146484375",
 				Underline:    true,
+				DataType:     pk.Type,
 			}
 
 			link := model.Link{
@@ -227,6 +228,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Width:        10,
 				Key:          mapNameKey[e.Name+col.Name],
 				Location:     "-150.0127868652344 -100.75775146484375",
+				DataType:     col.Type,
 			}
 
 			link := model.Link{
@@ -266,6 +268,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Key:          mapNameKey[w.Name+dk.ColumnName],
 				Location:     "-431.0127868652344 -80.75775146484375",
 				Underline:    true,
+				DataType:     dk.Type,
 			}
 
 			link := model.Link{
@@ -291,6 +294,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Width:        10,
 				Key:          mapNameKey[w.Name+col.Name],
 				Location:     "-150.0127868652344 -100.75775146484375",
+				DataType:     col.Type,
 			}
 
 			link := model.Link{
@@ -345,6 +349,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Key:          mapNameKey[asc.Name+pk.ColumnName],
 				Location:     "-431.0127868652344 -80.75775146484375",
 				Underline:    true,
+				DataType:     pk.Type,
 			}
 
 			link := model.Link{
@@ -429,6 +434,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Width:        10,
 				Key:          mapNameKey[br.Name+col.Name],
 				Location:     "-150.0127868652344 -100.75775146484375",
+				DataType:     col.Type,
 			}
 
 			link := model.Link{

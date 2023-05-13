@@ -38,10 +38,13 @@ func GetAllTables(db *sql.DB, driver, dbName string) (tables []string) {
 
 func GetPrimaryKeyFromRelation(db *sql.DB, dbName, driver, relationName string) (primaryKeyColumns []model.PrimaryKey) {
 	whereQuery := ""
+	whereQuery2 := ""
 	if driver == "mysql" {
 		whereQuery = ` WHERE TABLE_SCHEMA = ? AND tc.TABLE_NAME = ? AND tc.CONSTRAINT_TYPE = "PRIMARY KEY";`
+		whereQuery2 = ` WHERE COLUMN_NAME = ? AND c.TABLE_NAME = ?;`
 	} else if driver == "postgres" {
 		whereQuery = ` WHERE TABLE_SCHEMA = $1 AND tc.TABLE_NAME = $2 AND tc.CONSTRAINT_TYPE = 'PRIMARY KEY';`
+		whereQuery2 = ` WHERE COLUMN_NAME = $1 AND c.TABLE_NAME = $2;`
 		dbName = "public"
 	}
 
@@ -62,6 +65,18 @@ func GetPrimaryKeyFromRelation(db *sql.DB, dbName, driver, relationName string) 
 		if err := rows.Scan(&row.ColumnName); err != nil {
 			fmt.Println(err.Error())
 			return
+		}
+
+		rows2, err := db.Query(`select DATA_TYPE from information_schema.COLUMNS c`+whereQuery2, row.ColumnName, relationName)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		for rows2.Next() {
+			if err := rows2.Scan(&row.Type); err != nil {
+				fmt.Println(err.Error())
+				return
+			}
 		}
 
 		primaryKeyColumns = append(primaryKeyColumns, row)
@@ -135,7 +150,7 @@ func GetColumnsFromRelation(db *sql.DB, dbName, driver, relationName string) (co
 		param1 = `public`
 	}
 
-	rows, err := db.Query(`SELECT column_name from information_schema.columns c`+whereQuery, param1, param2)
+	rows, err := db.Query(`SELECT COLUMN_NAME, DATA_TYPE, IS_NULLABLE from information_schema.columns c`+whereQuery, param1, param2)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -144,7 +159,7 @@ func GetColumnsFromRelation(db *sql.DB, dbName, driver, relationName string) (co
 
 	for rows.Next() {
 		var row model.Column
-		if err := rows.Scan(&row.Name); err != nil {
+		if err := rows.Scan(&row.Name, &row.Type, &row.IsNullable); err != nil {
 			fmt.Println(err.Error())
 			return
 		}
