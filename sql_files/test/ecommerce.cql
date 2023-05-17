@@ -137,10 +137,9 @@ INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, r
 INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1337, 'Bondur', 'Loui', 4, 1102);
 INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1370, 'Hernandez', 'Gerard', 4, 1102);
 INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1401, 'Castillo', 'Pamela', 4, 1002);
-INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1501, 'Bott', 'Larry', 1, 0);
+INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1501, 'Bott', 'Larry', 1, NULL);
 INSERT INTO employees (employeenumber, lastname, firstname, work_at_employees, reports_to) VALUES (1504, 'Jones', 'Barry', 4, 1002);
 
-INSERT INTO reports_to (employeenumber, employees) values(1501,	0);
 INSERT INTO reports_to (employeenumber, employees) values(1401,	1002);
 INSERT INTO reports_to (employeenumber, employees) values(1504,	1002);
 INSERT INTO reports_to (employeenumber, employees) values(1166,	1056);
