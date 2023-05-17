@@ -9,6 +9,7 @@ import (
 	"rdb-to-er-extractor/identification"
 	"rdb-to-er-extractor/inclusion"
 	"rdb-to-er-extractor/model"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	_ "github.com/go-sql-driver/mysql"
@@ -152,7 +153,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 	for _, dr := range relationships.DependentRelationships {
 		fmt.Println("DR: ", dr)
-		mapNameKey[dr.Name] = keyCounter
+		mapNameKey[dr.Name+dr.EntityBName] = keyCounter
 		keyCounter += 1
 	}
 
@@ -175,8 +176,12 @@ func convertRDBtoEERModel(c *gin.Context) {
 	ERModel := model.ERModel{}
 	nodesData := []model.Node{}
 	linkData := []model.Link{}
+	posStart := 0
 
 	for _, e := range entities.StrongEntities {
+		posStartX := strconv.Itoa(posStart)
+		posStartY := strconv.Itoa(posStart - 25)
+		location := "-" + posStartX + " -" + posStartY
 		entity := model.Node{
 			Text:                 e.Name,
 			Color:                "black",
@@ -186,7 +191,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
 			Key:                  mapNameKey[e.Name],
-			Location:             "-100 -100.75775146484375",
+			Location:             location,
 		}
 		nodesData = append(nodesData, entity)
 
@@ -199,7 +204,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Height:       30,
 				Width:        10,
 				Key:          mapNameKey[e.Name+pk.ColumnName],
-				Location:     "-150.0127868652344 -100.75775146484375",
+				Location:     location,
 				Underline:    true,
 				DataType:     pk.Type,
 			}
@@ -225,9 +230,9 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Figure:       figure,
 				FromMaxLinks: 1,
 				Height:       30,
-				Width:        10,
+				Width:        30,
 				Key:          mapNameKey[e.Name+col.Name],
-				Location:     "-150.0127868652344 -100.75775146484375",
+				Location:     location,
 				DataType:     col.Type,
 			}
 
@@ -240,10 +245,14 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 			nodesData = append(nodesData, colAttrib)
 		}
+		posStart += 50
 
 	}
 
 	for _, w := range entities.WeakEntities {
+		posStartX := strconv.Itoa(posStart)
+		posStartY := strconv.Itoa(posStart - 25)
+		location := "-" + posStartX + " -" + posStartY
 		weakEntity := model.Node{
 			Text:                 w.Name,
 			Color:                "black",
@@ -253,7 +262,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
 			Key:                  mapNameKey[w.Name],
-			Location:             "-231.0127868652344 -60.75775146484375",
+			Location:             location,
 		}
 		nodesData = append(nodesData, weakEntity)
 
@@ -266,7 +275,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Height:       30,
 				Width:        10,
 				Key:          mapNameKey[w.Name+dk.ColumnName],
-				Location:     "-431.0127868652344 -80.75775146484375",
+				Location:     location,
 				Underline:    true,
 				DataType:     dk.Type,
 			}
@@ -293,7 +302,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Height:       30,
 				Width:        10,
 				Key:          mapNameKey[w.Name+col.Name],
-				Location:     "-150.0127868652344 -100.75775146484375",
+				Location:     location,
 				DataType:     col.Type,
 			}
 
@@ -306,6 +315,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 			nodesData = append(nodesData, colAttrib)
 		}
+		posStart += 50
 
 	}
 
@@ -371,7 +381,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			Height:               50,
 			FromLinkable:         false,
 			ToLinkableDuplicates: true,
-			Key:                  mapNameKey[dr.Name],
+			Key:                  mapNameKey[dr.Name+dr.EntityBName],
 			Location:             "-131.0127868652344 -40.75775146484375",
 		}
 		nodesData = append(nodesData, node)
@@ -394,6 +404,9 @@ func convertRDBtoEERModel(c *gin.Context) {
 	}
 
 	for _, br := range relationships.BinaryRelationships {
+		posStartX := strconv.Itoa(posStart)
+		posStartY := strconv.Itoa(posStart - 25)
+		location := "-" + posStartX + " -" + posStartY
 		node := model.Node{
 			Text:                 br.Name,
 			Color:                "black",
@@ -404,7 +417,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			ToLinkableDuplicates: true,
 			FromMaxLinks:         2,
 			Key:                  mapNameKey[br.Name],
-			Location:             "-251.0127868652344 -20.75775146484375",
+			Location:             location,
 		}
 		nodesData = append(nodesData, node)
 
@@ -433,7 +446,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 				Height:       30,
 				Width:        10,
 				Key:          mapNameKey[br.Name+col.Name],
-				Location:     "-150.0127868652344 -100.75775146484375",
+				Location:     location,
 				DataType:     col.Type,
 			}
 
@@ -446,6 +459,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 
 			nodesData = append(nodesData, colAttrib)
 		}
+		posStart += 50
 
 	}
 
