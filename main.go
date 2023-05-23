@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"rdb-to-er-extractor/extract"
@@ -33,10 +34,77 @@ func main() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 	router.POST("/extract-eer", convertRDBtoEERModel)
+	router.GET("/extract/:relation-name", extractDataFromTable)
 
 	// fmt.Println("RES: ", res)
 
 	router.Run("localhost:8080")
+}
+
+func extractDataFromTable(c *gin.Context) {
+	relationName := c.Param("relation-name")
+	dataSourceName := ""
+	db, err := sql.Open("mysql", dataSourceName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})
+	}
+
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
+	query := "SELECT * FROM " + relationName
+	rows, err := db.Query(query)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	defer rows.Close()
+
+	// Source: https://stackoverflow.com/questions/19991541/dumping-mysql-tables-to-json-with-golang
+	columns, err := rows.Columns()
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	count := len(columns)
+	tableData := make([]map[string]interface{}, 0)
+	values := make([]interface{}, count)
+	valuePtrs := make([]interface{}, count)
+
+	for rows.Next() {
+		for i := 0; i < count; i++ {
+			valuePtrs[i] = &values[i]
+		}
+		rows.Scan(valuePtrs...)
+		entry := make(map[string]interface{})
+		for i, col := range columns {
+			var v interface{}
+			val := values[i]
+			b, ok := val.([]byte)
+			if ok {
+				v = string(b)
+			} else {
+				v = val
+			}
+			entry[col] = v
+		}
+		tableData = append(tableData, entry)
+	}
+	jsonData, err := json.Marshal(tableData)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	fmt.Println(string(jsonData))
+
+	fmt.Println("GET ", relationName)
+	c.JSON(http.StatusOK, string(jsonData))
+	return
 }
 
 func convertRDBtoEERModel(c *gin.Context) {
@@ -61,7 +129,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 		driver = "postgres"
 		dataSourceName = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, url, port, dbName)
 	}
-
+	fmt.Println("datasource: ", dataSourceName)
 	db, err := sql.Open(driver, dataSourceName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})

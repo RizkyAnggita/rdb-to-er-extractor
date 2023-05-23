@@ -19,7 +19,7 @@ func IdentifyBinaryRelationship(allTable []model.Table, inclDepend []model.Inclu
 					isKeyBKeyInA := helper.IsExistInPrimaryKeys(id.KeyA, relationA.PrimaryKeys)
 					if isKeyBKeyInA {
 						relationship := model.Relationship{
-							Name:        id.KeyA + "-" + relationA.Name + "-" + relationB.Name,
+							Name:        id.KeyA + "_" + relationA.Name,
 							Type:        "BINARY",
 							Cardinality: "1-N",
 							EntityAName: relationA.Name,
@@ -33,7 +33,7 @@ func IdentifyBinaryRelationship(allTable []model.Table, inclDepend []model.Inclu
 							if fk.ColumnName == id.KeyA {
 								if fk.ReferencedTableName == relationA.Name && helper.IsExistInPrimaryKeys(fk.ReferencedColumnName, relationA.PrimaryKeys) {
 									relationship := model.Relationship{
-										Name:        fk.ColumnName + "-" + relationA.Name + "-" + relationB.Name,
+										Name:        fk.ColumnName + "_" + relationA.Name,
 										Type:        "BINARY",
 										Cardinality: "1-N",
 										EntityAName: relationA.Name,
