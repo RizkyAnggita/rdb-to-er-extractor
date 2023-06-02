@@ -20,12 +20,13 @@ import (
 )
 
 type ExtractERParams struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	DBName   string `json:"dbName"`
-	Port     string `json:"port"`
-	URL      string `json:"url"`
-	Driver   string `json:"driver"`
+	Username     string `json:"username"`
+	Password     string `json:"password"`
+	DBName       string `json:"dbName"`
+	Port         string `json:"port"`
+	URL          string `json:"url"`
+	Driver       string `json:"driver"`
+	RelationName string `json:"relationName"`
 }
 
 func main() {
@@ -34,17 +35,36 @@ func main() {
 	config.AllowAllOrigins = true
 	router.Use(cors.New(config))
 	router.POST("/extract-eer", convertRDBtoEERModel)
-	router.GET("/extract/:relation-name", extractDataFromTable)
-
-	// fmt.Println("RES: ", res)
+	router.POST("/extract", extractDataFromTable)
 
 	router.Run("localhost:8080")
 }
 
 func extractDataFromTable(c *gin.Context) {
-	relationName := c.Param("relation-name")
+	var params ExtractERParams
+	if err := c.ShouldBindJSON(&params); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	username := params.Username
+	password := params.Password
+	url := params.URL
+	port := params.Port
+	driverParams := params.Driver
+	dbName := params.DBName
+	relationName := params.RelationName
+
+	driver := ""
 	dataSourceName := ""
-	db, err := sql.Open("mysql", dataSourceName)
+	if driverParams == "MySQL" {
+		driver = "mysql"
+		dataSourceName = username + ":" + password + "@tcp(" + url + ":" + port + ")/" + dbName
+	} else if driverParams == "PostgreSQL" {
+		driver = "postgres"
+		dataSourceName = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", username, password, url, port, dbName)
+	}
+
+	db, err := sql.Open(driver, dataSourceName)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error: ": err.Error()})
 	}
@@ -55,6 +75,7 @@ func extractDataFromTable(c *gin.Context) {
 	if err != nil {
 		panic(err)
 	}
+
 	query := "SELECT * FROM " + relationName
 	rows, err := db.Query(query)
 	if err != nil {
@@ -100,9 +121,6 @@ func extractDataFromTable(c *gin.Context) {
 		return
 	}
 
-	fmt.Println(string(jsonData))
-
-	fmt.Println("GET ", relationName)
 	c.JSON(http.StatusOK, string(jsonData))
 	return
 }
