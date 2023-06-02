@@ -69,12 +69,13 @@ type AssociativeEntity struct {
 }
 
 type Relationship struct {
-	Name        string
-	Type        string
-	Cardinality string
-	EntityAName string
-	EntityBName string
-	Columns     []Column
+	Name          string
+	Type          string
+	Cardinality   string
+	EntityAName   string
+	EntityBName   string
+	Columns       []Column
+	Identificator string
 }
 
 type Column struct {

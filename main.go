@@ -486,6 +486,7 @@ func convertRDBtoEERModel(c *gin.Context) {
 			FromMaxLinks:         2,
 			Key:                  mapNameKey[br.Name],
 			Location:             location,
+			Identificator:        br.Identificator,
 		}
 		nodesData = append(nodesData, node)
 

@@ -21,12 +21,13 @@ func IdentifyRelationshipByRegularRelationshipRelation(arrTable []model.Table,
 
 			if len(tInclDepend) == 2 {
 				relationship := model.Relationship{
-					Name:        t.Name,
-					Type:        "BINARY",
-					Cardinality: "N-N",
-					EntityAName: tInclDepend[0].RelationBName,
-					EntityBName: tInclDepend[1].RelationBName,
-					Columns:     t.Columns,
+					Name:          t.Name,
+					Type:          "BINARY",
+					Cardinality:   "N-N",
+					EntityAName:   tInclDepend[0].RelationBName,
+					EntityBName:   tInclDepend[1].RelationBName,
+					Columns:       t.Columns,
+					Identificator: t.Name,
 				}
 
 				relationships = append(relationships, relationship)
